@@ -6,8 +6,10 @@
 \documentclass[12pt]{article}
 \usepackage[margin=0.75in]{geometry}
 \usepackage{amsmath,amsthm,amssymb,mathtools,graphicx,enumitem,hyperref,hyphenat,float}
+% \usepackage[paperwidth=\maxdimen,paperheight=\maxdimen]{geometry}
 \usepackage{svg}
 \usepackage{register}
+\usepackage{rotating}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -42,7 +44,6 @@
 \newcommand*\dif{\mathop{}\!\mathrm{d}}
 \newcommand{\Beta}{\mathcal B}
 \newcommand{\Seq}{\mathrm{Seq }}
-
 \theoremstyle{plain}
 
 \newtheorem{thm}{Theorem} % reset theorem numbering for each chapter
@@ -83,7 +84,7 @@
 	%----------------------------------------------------------------------------------------
 	
 	\HRule \\[0.4cm]
-	{ \huge \bfseries Phase 1 Report}\\[0.4cm] % Title of your doc
+	{ \huge \bfseries Orthrus - Phase 1 Report}\\[0.4cm] % Title of your doc
 	\HRule \\[1.5cm]
 	 
 	%----------------------------------------------------------------------------------------
@@ -99,8 +100,11 @@
 	\end{flushleft}
 	\end{minipage}
 	\begin{minipage}{0.4\textwidth}
-	\begin{flushright} \large
-	\textbf{I/O Block Team} \\[4cm]
+	\begin{flushright}\large
+        Section 1 BN. 03 \\
+        Section 2 BN. 21 \\
+        Section 1 BN. 22 \\
+        Section 1 BN. 23 \\
 	\end{flushright}
 	\end{minipage}\\[1cm]
 	
@@ -119,26 +123,9 @@
 	\vfill % Fill the rest of the page with whitespace
 	
 \end{titlepage}
-% \begin{titlepage}
-%     \centering
-%     \vspace{3cm}
-    
-%     {\LARGE Computer Architecture 2 Project - Phase 1}
-    
-%     \vspace{3cm}
-    
-%     {\Large 
-%     \begin{tabular}{rl}
-%         Team 1 & \tabularnewline
-%         Ahmad Khaled & S01 BN 03 \tabularnewline
-%         Maryam Shalaby & SX BN Y \tabularnewline
-%         Omnia Zakaria & SX BN K \tabularnewline
-%         Zeinab Rabie & S01 BN 26
-%     \end{tabular}}
-    
-%     \vfill
-%     {\large Computer Engineering Department - Cairo University}
-% \end{titlepage}
+
+\section{Introduction}
+Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA similar to the MIPS ISA. In the following sections we outline the instruction format, the general design of the processor, as well as the pipeline stages design.
 
 \section{Instruction Set Architecture}
     The structure for the IR for two-operand instructions is given in Figure~\ref{IR-TwoOp}. The structure for one-operand instructions is given in Figure~\ref{IR-SingleOp}. The structure for branching instructions is given in Figure~\ref{IR-Branch}. The structure for the rest of the instructions is given in Figure~\ref{IR-Misc}.
@@ -274,14 +261,21 @@
 \pagebreak
 
 \section{Schematics}
-    Figure~\ref{sys-schematic} includes the schematic for the microprocessor design. The actual register file contains all the registers, but the special registers (temporaries - MDR - MAR) are shown outside here for clarity.
-    % \begin{figure}[H]
-    %     \centering
-    %     \includegraphics[height=19cm]{schematic.jpg}
-    %     \caption{Bus System Schematic}
-    %     \label{sys-schematic}
-    % \end{figure}
-
+    Figures~\ref{sys-schematic-1} and ~\ref{sys-schematic-2} include the schematic for the design.
+    \pagebreak
+    \begin{sidewaysfigure}[h]
+        \centering
+        \includegraphics[page=1]{Diagrams/SystemOverviewSplit}
+        \caption{Overall Schematic Part 1}
+        \label{sys-schematic-1}
+    \end{sidewaysfigure}
+    \begin{sidewaysfigure}[h]
+        \centering
+        \includegraphics[page=2]{Diagrams/SystemOverviewSplit}
+        \caption{Overall Schematic Part 2}
+        \label{sys-schematic-2}
+    \end{sidewaysfigure}
+    % \include{OverviewFig}
 \pagebreak
 
 \section{Pipeline}
