@@ -124,6 +124,8 @@
 	
 \end{titlepage}
 
+\tableofcontents
+
 \section{Introduction}
 Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA similar to the MIPS ISA. In the following sections we outline the instruction format, the general design of the processor, as well as the pipeline stages design.
 
@@ -260,27 +262,54 @@ Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA 
     \end{figure}
 \pagebreak
 
-\section{Schematics}
-    Figures~\ref{sys-schematic-1} and ~\ref{sys-schematic-2} include the schematic for the design.
-    \pagebreak
+\section{Design}
+\subsection{Overall System Schematic}
+Figures~\ref{sys-schematic-1} and ~\ref{sys-schematic-2} show the overall design of Orthrus, along with the main connections. Note that some of the connections specific to hazards and forwarding are omitted for clarity, and that some of the connections between pipeline register buffers are also omitted for clarity (but if two registers share the same name across two register buffers then they should be connected). Note as well that our design \textbf{has no central control unit}. The units in each stage are responsible for generating control signals for themselves given the inputs from the previous stage, from the memory, and from the Hazard/Forwarding unit. In the following subsections, we discuss each unit shown in the diagram in detail. Wemostly supress the details of hazard handling by assuming that all the units mentioned always have a \textbf{stall} input and a \textbf{flush} input that cause the unit to stall its corresponding stage (by propagating a No-Op to the next instruction) or flush whatever instruction is in it (by propagating a No-Op to the next instruction and having the previous pipeline buffer reset). A more thorough discussion of hazards is given in the Hazard unit subsection.
     \begin{sidewaysfigure}[h]
         \centering
         \includegraphics[page=1]{Diagrams/SystemOverviewSplit}
         \caption{Overall Schematic Part 1}
         \label{sys-schematic-1}
     \end{sidewaysfigure}
-    \begin{sidewaysfigure}[h]
+    \begin{sidewaysfigure}[h]b
         \centering
         \includegraphics[page=2]{Diagrams/SystemOverviewSplit}
         \caption{Overall Schematic Part 2}
         \label{sys-schematic-2}
     \end{sidewaysfigure}
-    % \include{OverviewFig}
-\pagebreak
 
-\section{Pipeline}
-\subsection{Stages}
-\subsection{Hazards}
+\subsection{Memory Unit}
+% TO-DO: DISCUSS THIS.
+The memory block used is interfaced by two address lines, with the second line given priority whenever a read / write is requested by it. A single word is read or written when an address is on Address2. When an address is on the first line, \textbf{two words} are read at a time starting from the word at the address given by Address1. The first line is only for reading from the memory and has no write option. The read operation is instantaneous while the write operation takes 1 clock cycle (the value is written onto the memory on the falling edge of the clock). 
+
+\subsection{Fetch Stage}
+In the fetch stage, the Program Counter (PC) register is connected to Address1 of the memory, the data is then read into the fetch and pre-decode unit which has three outputs: the IRs (Instruction Registers) corresponding to the two streams in Orthrus, IR1 and IR2, as well as the increment to add to the PC for fetching the next instruction. The key point is that the pre-decode unit must do not let two memory-accessing instructions simultaneously into the two streams (since this would result in a structural hazard) and hence passes a No-Op into the second stream when this is detected. The pre-decode unit also passes a No-Op into the second stream when an immediate instruction is loaded, since an immediate instruction takes two words. The pre-decode unit must also pass a No-Op when the two instructions try to use the output port. To reduce hardware complexity, a CALL must always be in the first stream, and a No-Op is inserted to fix that if it is not the case. The flow chart for the unit's operation is given by Figure~\ref{fetch-pre-decode-unit}. For the flow chart, the instructions that access memory are: PUSH / POP / LDD / STD / CALL / RET / RTI. In addition to the pre-decoding unit mentioned, the fetch stage also includes an incrementor to increment the PC as well as a small unit (shown in Figure~\ref{fetch-predecode-npc}) to choose whether to get the PC from the incremented PC, normal branches, or from RET / RTI / ITR (which are executed in the last stage by necessity of fetching from memory).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{Diagrams/fetch_predecode_su}
+    \caption{Fetch and Pre-Decode Unit Operation}
+    \label{fetch-pre-decode-unit}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics{Diagrams/fetch_predecode_npc.png}
+    \caption{Next PC MUXing Unit}
+    \label{fetch-predecode-npc}
+\end{figure}
+
+\subsection{Decode Stage}
+
+\subsection{Execute Stage}
+
+\subsection{Memory Stage}
+
+\subsection{Write Back Stage}
+
+\subsection{Hazard Detection Unit}
+
+\subsection{Branching}
 
 
 % --------------------------------------------------------------
