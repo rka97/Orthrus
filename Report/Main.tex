@@ -130,19 +130,7 @@
 Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA similar to the MIPS ISA. In the following sections we outline the instruction format, the general design of the processor, as well as the pipeline stages design.
 
 \section{Instruction Set Architecture}
-    The structure for the IR for two-operand instructions is given in Figure~\ref{IR-TwoOp}. The structure for one-operand instructions is given in Figure~\ref{IR-SingleOp}. The structure for branching instructions is given in Figure~\ref{IR-Branch}. The structure for the rest of the instructions is given in Figure~\ref{IR-Misc}.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{c|c|c|c|c|}
-            \cline{2-5}
-            \textbf{Direct}   & Register & Auto-increment & Auto-decrement & Indexed \\ \cline{2-5} 
-            \textit{Code}     & 000      & 001            & 010            & 011     \\ \cline{2-5} 
-            \textbf{Indirect} & Register & Auto-increment & Auto-decrement & Indexed \\ \cline{2-5} 
-            \textit{Code}     & 100      & 101            & 110            & 111     \\ \cline{2-5} 
-        \end{tabular}
-        \caption{Addressing Mode Codes}
-        \label{addr-mode-codes}
-    \end{table}
+    The structure for the IR for One-Operand instructions is given in Figure~\ref{IR-1op}.The structure for the IR for Two-Operand instructions is given in Figure~\ref{IR-2op}. The structure for the IR for Memory instructions is given in Figure~\ref{IR-memory}. The structure for the IR for Branch & Change of Control instructions is given in Figure~\ref{IR-Branch}.
     \begin{table}[H]
         \centering
         \begin{tabular}{c|c|c|c|c|}
@@ -157,107 +145,109 @@ Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA 
     \end{table}
     \begin{table}[H]
         \centering
-        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
-        \hline
-        Instruction & MOV  & ADD  & ADC  & SUB  & SBC  & AND  & OR   & XNOR & CMP  \\ \hline
-        OP Code     & 1111 & 1110 & 1101 & 1100 & 1011 & 1010 & 1001 & 1000 & 0111 \\ \hline
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+            \hline
+            Instruction  & NOP & SETC & CLRC  & NOT & INC & DEC & OUT & IN  \\ \hline
+            OP Code     & 00000 & 00001 & 00010 & 00011 & 00100 & 00101 & 00110 & 00111 \\ \hline
+        \end{tabular}
+        \caption{One-Operand Instruction Codes}
+        \label{One_Op Opcodes}
+    \end{table}
+    
+    \begin{figure}[H]
+        \centering
+        \caption{IR Structure For One-Operand Instructions}
+        \label{IR-1op}
+        \vspace{0.5 cm}
+        \regfield{}{5}{11}{{Instruction}}
+        \regfield{}{3}{8}{{Destination Register}}
+        \regfield{}{8}{0}{{}}
+        \\
+        \vspace{0.5 cm}
+        \begin{regdesc}\begin{reglist}
+            \item [Instruction] specifies the instruction to execute. Possible codes given in. Table~\ref{One_Op Opcodes}.
+            \item [Destination Register] specifies the destination register. Possible codes given in Table~\ref{reg-addr-codes}.
+        \end{reglist}\end{regdesc}
+    \end{figure}
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|c|}
+            \hline
+            Instruction & MOV & ADD & SUB & AND & OR & SHL & SHR \\ \hline
+            OP Code     & 01000 & 01001 & 01010 & 01011 & 01100 & 01101 & 01110  \\ \hline
         \end{tabular}
         \caption{Two-Operand Instruction Codes}
-        \label{two-operand-op-codes}
+        \label{Two_Op Opcodes}
     \end{table}
+    
     \begin{figure}[H]
         \centering
         \caption{IR Structure For Two-Operand Instructions}
-        \label{IR-TwoOp}
+        \label{IR-2op}
         \vspace{0.5 cm}
-        \regfield{}{4}{12}{{Instruction}}
-        \regfield{}{3}{9}{{Source Address}}
-        \regfield{}{3}{6}{{Source Register}}
-        \regfield{}{3}{3}{{Destination Address}}
-        \regfield{}{3}{0}{{Destination Register}} \\
+        \regfield{}{5}{11}{{Instruction}}
+        \regfield{}{3}{8}{{Source Register}}
+        \regfield{}{3}{5}{{Destination Register}}
+        \regfield{}{4}{1}{{Shift Amount}}
+        \regfield{}{1}{0}{{}}
+        \\
         \vspace{0.5 cm}
         \begin{regdesc}\begin{reglist}
-            \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{two-operand-op-codes}.
-            \item [Source Address] specifies the addressing mode to choose for the source. Possible codes given in Table ~\ref{addr-mode-codes}.
+            \item [Instruction] specifies the instruction to execute. Possible codes given in. Table~\ref{Two_Op Opcodes}.
             \item [Source Register] specifies the source register. Possible codes given in Table~\ref{reg-addr-codes}.
-            \item [Destination Address] specifies the addressing mode to choose for the destination. Possible codes given in Table~\ref{addr-mode-codes}.
             \item [Destination Register] specifies the destination register. Possible codes given in Table~\ref{reg-addr-codes}.
+            \item [Shift Amount] specifies the number of bits to shift the source Register by.
         \end{reglist}\end{regdesc}
     \end{figure}
     \begin{table}[H]
         \centering
-        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+        \begin{tabular}{|c|c|c|c|c|c|}
             \hline
-            Instruction & INC  & DEC  & CLR  & INV  & LSR  & ROR  & RRC  & ASR & LSL & ROL & RLC  \\ \hline
-            OP Code     & 0000 & 0001 & 0010 & 0011 & 0100 & 0101 & 0110 & 0111 & 1000 & 1001 & 1010 \\ \hline
+            Instruction & PUSH  & POP  & LDM  & LDD  & STD   \\ \hline
+            OP Code     & 01111 & 10000 & 10001 & 10010 & 10011 \\ \hline
         \end{tabular}
-        \caption{Single Operand Instruction Codes}
-        \label{single-operand-op-codes}
+        \caption{Memory Instruction Codes}
+        \label{memory opCodes}
     \end{table}
     \begin{figure}[H]
         \centering
-        \caption{IR Structure For Single-Operand Instructions}
-        \label{IR-SingleOp}
+        \caption{IR Structure For Memory Instructions}
+        \label{IR-memory}
         \vspace{0.5 cm}
-        \regfield{}{4}{12}{0110}
-        \regfield{}{4}{8}{{Instruction}}
-        \regfield{}{2}{6}{00}
-        \regfield{}{3}{3}{{Operand Address}}
-        \regfield{}{3}{0}{{Operand Register}} \\
+        \regfield{}{5}{11}{{Instruction}}
+        \regfield{}{3}{8}{{Source Register}}
+        \regfield{}{3}{5}{{Destination Register}}
+        \regfield{}{5}{0}{{}} \\
         \vspace{0.5 cm}
         \begin{regdesc}\begin{reglist}            
-            \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{single-operand-op-codes}.
-            \item [Operand Address] specifies the addressing mode to choose for the operand. Possible codes given in Table~\ref{addr-mode-codes}.
-            \item [Operand Register] specifies the operand register. Possible codes given in Table~\ref{reg-addr-codes}.
+            \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{memory opCodes}.
+            \item [Source Register] specifies the Source Register. Possible codes given in Table~\ref{reg-addr-codes}.
+            \item [Destination Register] specifies the Destination Register. Possible codes given in Table~\ref{reg-addr-codes}.
         \end{reglist}\end{regdesc}
     \end{figure}
     \begin{table}[H]
         \centering
         \begin{tabular}{|c|c|c|c|c|c|c|c|}
             \hline
-            Instruction & BR  & BEQ  & BNE  & BLO  & BLS  & BHI  & BHS \\ \hline
-            OP Code     & 000 & 001 & 010 & 011 & 100 & 101 & 110 \\ \hline
+            Instruction & JZ  & JN & JC  & JMP  & CALL  & RET  & RTI \\ \hline
+            OP Code     & 10100 & 10101 & 10110 & 10111 & 11000 & 11001 & 11010 \\ \hline
         \end{tabular}
-        \caption{Branching Instruction Codes}
-        \label{br-op-codes}
+        \caption{Branch & Change of Control Instruction Codes}
+        \label{Branch Opcodes}
     \end{table}
     \begin{figure}[H]
         \centering
-        \caption{IR Structure For Branching Instructions}
+        \caption{IR Structure For Branch & Change of Control Instruction}
         \label{IR-Branch}
         \vspace{0.5 cm}
-        \regfield{}{4}{12}{0101}
-        \regfield{}{3}{9}{{Instruction}}
-        \regfield{}{9}{0}{{Operand}} \\
+        \regfield{}{5}{11}{{Instruction}}
+        \regfield{}{3}{8}{{Destination Register}}
+        \regfield{}{8}{0}{{}} \\
         \vspace{0.5 cm}
         \begin{regdesc}\begin{reglist}            
-            \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{br-op-codes}.
-            \item [Operand] specifies the branching offset.
-        \end{reglist}\end{regdesc}
-    \end{figure}
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|c|c|c|c|c|c|c|}
-            \hline
-            Instruction & JSR  & RTS  & HITR  & IRET  & HLT  & NOP  \\ \hline
-            OP Code     & 0100 & 0011 & 0011 & 0010 & 0001 & 0000 \\ \hline
-        \end{tabular}
-        \caption{Miscellaneous Instruction Codes}
-        \label{misc-op-codes}
-    \end{table}
-    \begin{figure}[H]
-        \centering
-        \caption{IR Structure For Miscellaneous Instructions}
-        \label{IR-Misc}
-        \vspace{0.5 cm}
-        \regfield{}{4}{12}{{Instruction}}
-        \regfield{}{1}{11}{{Extra}}
-        \regfield{}{11}{0}{{Operand}} \\
-        \vspace{0.5 cm}
-        \begin{regdesc}\begin{reglist}            
-            \item [Instruction] specifies the instruction to execute (except for differentiating RTS and HITR, done using Extra bit). Possible codes given in Table~\ref{misc-op-codes}.
-            \item [Extra] useful for JSR and HITR only. specifies whether the Operand is given directly or using a register/addressing mode for JSR. Indicates HITR when instruction is $0011$ and Extra$=1$, indicates RTS if instruction is $0011$ and Extra$=0$. 
-            \item [Operand] useful for JSR only. specifies the memory location to jump  to.
+            \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{Branch Opcodes}.
+            \item [Destination Register] specifies the destination register. Possible codes given in Table~\ref{reg-addr-codes}.
         \end{reglist}\end{regdesc}
     \end{figure}
 \pagebreak
