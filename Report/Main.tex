@@ -216,13 +216,13 @@ Orthrus is a pipelined static dual-issue microprocessor implementing a RISC ISA 
         \label{IR-memory}
         \vspace{0.5 cm}
         \regfield{}{5}{11}{{Instruction}}
-        \regfield{}{3}{8}{{Source Register}}
-        \regfield{}{3}{5}{{Destination Register}}
+        \regfield{}{3}{8}{{Destination Register}}
+        \regfield{}{3}{5}{{}}
         \regfield{}{5}{0}{{}} \\
         \vspace{0.5 cm}
         \begin{regdesc}\begin{reglist}            
             \item [Instruction] specifies the instruction to execute. Possible codes given in Table~\ref{memory opCodes}.
-            \item [Source Register] specifies the Source Register. Possible codes given in Table~\ref{reg-addr-codes}.
+            % \item [Source Register] specifies the Source Register. Possible codes given in Table~\ref{reg-addr-codes}.
             \item [Destination Register] specifies the Destination Register. Possible codes given in Table~\ref{reg-addr-codes}.
         \end{reglist}\end{regdesc}
     \end{figure}

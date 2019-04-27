@@ -1,0 +1,78 @@
+{
+    "zero_operand_commands": [
+        "NOP",
+        "SETC",
+        "CLRC",
+        "RET",
+        "RTI"
+    ],
+    "one_operand_commands": [
+        "NOT",
+        "INC",
+        "DEC",
+        "OUT",
+        "IN",
+        "PUSH",
+        "POP",
+        "JZ",
+        "JN",
+        "JC",
+        "JMP",
+        "CALL"
+    ],
+    "two_operand_commands": [
+        "MOV",
+        "ADD",
+        "SUB",
+        "AND",
+        "OR",
+        "LDD",
+        "STD"
+    ],
+    "small_immediate_commands": [
+        "SHL",
+        "SHR"
+    ],
+    "long_immediate_commands": [
+        "LDM"
+    ],
+    "op_codes": {
+        "NOP":      "00000",
+        "SETC":     "00001",
+        "CLRC":     "00010",
+        "NOT":      "00011",
+        "INC":      "00100",
+        "DEC":      "00101",
+        "OUT":      "00110",
+        "IN":       "00111",
+        "MOV":      "01000",
+        "ADD":      "01001",
+        "SUB":      "01010",
+        "AND":      "01011",
+        "OR":       "01100",
+        "SHL":      "01101",
+        "SHR":      "01110",
+        "PUSH":     "01111",
+        "POP":      "10000",
+        "LDM":      "10001",
+        "LDD":      "10010",
+        "STD":      "10011",
+        "JZ":       "10100",
+        "JN":       "10101",
+        "JC":       "10110",
+        "JMP":      "10111",
+        "CALL":     "11000",
+        "RET":      "11001",
+        "RTI":      "11010"
+    },
+    "register_codes": {
+        "R0":       "000",
+        "R1":       "001",
+        "R2":       "010",
+        "R3":       "011",
+        "R4":       "100",
+        "R5":       "101",
+        "R6":       "110",
+        "R7":       "111"
+    }
+}
