@@ -34,4 +34,5 @@ package Constants is
     constant INST_ITR       :   std_logic_vector(4 downto 0) := "11011";
     constant RESET_ADDR     :   std_logic_vector(15 downto 0) := X"000A";
     -- TODO: implement the reset routine and change the reset address.
+    constant CLK_PERIOD     :   time := 1 ns;
 end package;
