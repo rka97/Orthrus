@@ -47,33 +47,41 @@ def assemble(file_name):
             current_addr = int(words[1])
             logger.info("Changing address to " + str(current_addr))
         elif zero_op_commands.count(words[0]) > 0:
-            memory[current_addr] = op_codes[words[0]] + "0000000000"
+            memory[current_addr] = op_codes[words[0]] + "00000000000"
             logger.info("At address " + current_addr_str + ": " + words[0])
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif one_op_commands.count(words[0]) > 0:
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + "00000000"
             logger.info("At address " + current_addr_str + ": " + words[0] + " " + words[1])
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif two_op_commands.count(words[0]) > 0:
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + register_codes[words[2]] + "00000"
             logger.info("At address " + current_addr_str +
                         ": " + words[0] + " " + words[1] + " " + words[2])
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif small_imm_commands.count(words[0]) > 0:
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + \
+                "000" + \
                 binary_repr(int(words[2]), width=5)
             logger.info("At address " + current_addr_str +
                         ": " + words[0] + " " + words[1] + " " + words[2])
+            print(len(memory[current_addr]))
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif long_immediate_commands.count(words[0]) > 0:
-            memory[current_addr] = op_codes[words[0]] + register_codes[words[1]]
+            memory[current_addr] = op_codes[words[0]] + register_codes[words[1]] + "00000000"
             logger.info("At address " + current_addr_str + ": " + words[0] + " " + words[1])
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
             memory[current_addr] = binary_repr(int(words[2]), 16)
             logger.info("At address " + str(current_addr) + ": " + words[2])
+            assert(len(memory[current_addr]) == 16)
             current_addr += 1
         else:
             num = int(words[0])
