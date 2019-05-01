@@ -30,7 +30,7 @@ entity FetchStage is
         -- the IRs and newPC
         IR1                 :   out std_logic_vector(2*N-1 downto 0);
         IR2                 :   out std_logic_vector(2*N-1 downto 0);
-        NewPC               :   out std_logic_vector(2*N-1 downto 0)
+        NewPC               :   out std_logic_vector(M-1 downto 0)
     );
 end FetchStage;
 
@@ -42,6 +42,8 @@ architecture Behavioral of FetchStage is
     signal incremented_pc   : std_logic_vector(M-1 downto 0);
     signal instr1_op        : std_logic_vector(4 downto 0);
     signal instr2_op        : std_logic_vector(4 downto 0);
+    signal instr1           : std_logic_vector(N-1 downto 0);
+    signal instr2           : std_logic_vector(N-1 downto 0);  
     constant NOP_FULL       : std_logic_vector(2*N-1 downto 0) := INST_NOP & (2*N-6 downto 0 => '0');
     
     function UsesMemory(
@@ -59,17 +61,22 @@ begin
     generic map ( n => M )
     port map (
         clk => clk, d => pc_data_in, q => pc_data_out,
-        rst_data => (others => '0'), load => pc_load, reset => reset
+        rst_data => RESET_ADDR, load => pc_load, reset => reset
     );
     mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
     read_mem <= '1' when reset = '0' and stall = '0' else '0';
+
     instr1_op <= mem_data_in(2*N-1 downto 2*N-5);
     instr2_op <= mem_data_in(N-1 downto N-5);
+
+    instr1 <= mem_data_in(N-1 downto 0); -- first instruction
+    instr2 <= mem_data_in(2*N-1 downto N); -- second instruction
+
     incremented_pc <= std_logic_vector(unsigned(pc_data_out) + to_unsigned(increment, M));
     NewPC <= pc_data_in;
 
     -- Combinational process that computes the new IRs and memory increment given the process.
-    pre_decode : process(reset, interrupt, instr1_op, instr2_op, mem_data_in)
+    pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2)
     begin
         if reset = '1' or stall = '1' then
             IR1 <= NOP_FULL;
@@ -81,30 +88,30 @@ begin
             increment <= 0;
         else
             if instr1_op = INST_LDM then -- If INST1 is immediate
-                IR1 <= mem_data_in;
+                IR1 <= instr1 & instr2;
                 IR2 <= NOP_FULL;
                 increment <= 2;
             elsif instr2_op = INST_LDM then -- IF INST2 is immediate
-                IR1 <= mem_data_in(2*N-1 downto N) & (N-1 downto 0 => '0');
+                IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
             elsif instr1_op = INST_CALL then -- If INST1 is a CALL
-                IR1 <= mem_data_in(2*N-1 downto N) & (N-1 downto 0 => '0');
+                IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
             elsif (UsesMemory(instr1_op) = '1' and UsesMemory(instr2_op) = '1') then
                 -- if both instructions use memory
-                IR1 <= mem_data_in(2*N-1 downto N) & (N-1 downto 0 => '0');
+                IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
             elsif instr1_op = INST_OUT and instr2_op = INST_OUT then
                 -- If both instructions use the OUT port
-                IR1 <= mem_data_in(2*N-1 downto N) & (N-1 downto 0 => '0');
+                IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
             else
-                IR1 <= mem_data_in(2*N-1 downto N) & (N-1 downto 0 => '0');
-                IR2 <= mem_data_in(N-1 downto 0) & (N-1 downto 0 => '0');
+                IR1 <= instr1 & (N-1 downto 0 => '0');
+                IR2 <= instr2 & (N-1 downto 0 => '0');
                 increment <= 2;
             end if;
         end if;
@@ -114,7 +121,7 @@ begin
     -- Combinational process that computes the New PC given the old PC and some control signals.
     comp_npc : process(incremented_pc, mem_data_in, stall, branch, branch_address, wpc1_write, wpc2_write)
     begin
-        if stall = '1' then -- On a stall, do nothing.
+        if stall = '1' or reset ='1' then -- On a stall or reset, do nothing.
             pc_load <= '0';
             pc_data_in <= (others => '0');
         elsif branch = '1' then -- Alter the PC to the branch address.

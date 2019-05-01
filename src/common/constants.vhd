@@ -32,4 +32,6 @@ package Constants is
     constant INST_RET       :   std_logic_vector(4 downto 0) := "11001";
     constant INST_RTI       :   std_logic_vector(4 downto 0) := "11010";
     constant INST_ITR       :   std_logic_vector(4 downto 0) := "11011";
+    constant RESET_ADDR     :   std_logic_vector(15 downto 0) := X"000A";
+    -- TODO: implement the reset routine and change the reset address.
 end package;
