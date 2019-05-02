@@ -18,7 +18,6 @@ entity FetchStage is
         mem_data_in         :   in std_logic_vector(2*N-1 downto 0);
         mem_address_out     :   out std_logic_vector(M-1 downto 0);
 
-
         -- control signals
         stall               :   in std_logic;
         interrupt           :   in std_logic;
@@ -27,10 +26,10 @@ entity FetchStage is
         wpc1_write          :   in std_logic;
         wpc2_write          :   in std_logic;
 
-        -- the IRs and newPC
+        -- the IRs and new_pc
         IR1                 :   out std_logic_vector(2*N-1 downto 0);
         IR2                 :   out std_logic_vector(2*N-1 downto 0);
-        NewPC               :   out std_logic_vector(M-1 downto 0)
+        new_pc              :   out std_logic_vector(M-1 downto 0)
     );
 end FetchStage;
 
@@ -58,11 +57,12 @@ architecture Behavioral of FetchStage is
     end UsesMemory;
 begin
     PC_inst : entity orthrus.Reg
-    generic map ( n => M )
-    port map (
-        clk => clk, d => pc_data_in, q => pc_data_out,
-        rst_data => RESET_ADDR, load => pc_load, reset => reset
-    );
+        generic map ( n => M )
+        port map (
+            clk => clk, d => pc_data_in, q => pc_data_out,
+            rst_data => RESET_ADDR, load => pc_load, reset => reset
+        );
+    
     mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
     read_mem <= '1' when reset = '0' and stall = '0' else '0';
 
@@ -73,7 +73,7 @@ begin
     instr2 <= mem_data_in(2*N-1 downto N); -- second instruction
 
     incremented_pc <= std_logic_vector(unsigned(pc_data_out) + to_unsigned(increment, M));
-    NewPC <= pc_data_in;
+    new_pc <= pc_data_in;
 
     -- Combinational process that computes the new IRs and memory increment given the process.
     pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2)

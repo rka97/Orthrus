@@ -43,6 +43,6 @@ package Constants is
     constant ALUOP_AND      :   std_logic_vector(3 downto 0) := "0101";
     constant ALUOP_OR       :   std_logic_vector(3 downto 0) := "0110";
     constant ALUOP_SHL      :   std_logic_vector(3 downto 0) := "0111";
-    constant ALUOP_SHR      :   std_logic_vector(3 downto 0) := "10009";
+    constant ALUOP_SHR      :   std_logic_vector(3 downto 0) := "1000";
     
 end package;

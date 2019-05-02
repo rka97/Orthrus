@@ -16,7 +16,7 @@ architecture TB of FetchStageTB is
     signal data_into_mem : std_logic_vector(31 downto 0);
     signal data_outof_mem : std_logic_vector(31 downto 0);
     signal IR1, IR2 : std_logic_vector(31 downto 0);
-    signal NewPC : std_logic_vector(15 downto 0);
+    signal new_pc : std_logic_vector(15 downto 0);
     signal ir1_op : std_logic_vector(4 downto 0);
     signal ir2_op : std_logic_vector(4 downto 0);
     constant period : time := 1 ns;
@@ -48,7 +48,7 @@ begin
             wpc2_write => wpc2_write,
             IR1 => IR1,
             IR2 => IR2,
-            NewPC => NewPC
+            new_pc => new_pc
         );
     
     process is
@@ -60,7 +60,7 @@ begin
         wait for period;
         assert (ir1_op = INST_SETC) report "IR1 is wrong for STC! value = " & integer'image(to_integer(unsigned(IR1(31 downto 31-5+1))));
         assert(ir2_op = INST_NOP) report "IR2 is wrong for NOP!";
-        assert(NewPC = X"000C") report "NewPC is wrong!";
+        assert(new_pc = X"000C") report "new_pc is wrong!";
         wait for period;
         assert(ir1_op = INST_CLRC) report "IR2 is wrong for CLRC!";
         assert(ir2_op = INST_NOT) report "IR2 is wrong for NOT1";
