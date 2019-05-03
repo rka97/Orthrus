@@ -35,14 +35,17 @@ package Constants is
     constant RESET_ADDR     :   std_logic_vector(15 downto 0) := X"000A";
     -- TODO: implement the reset routine and change the reset address.
     constant CLK_PERIOD     :   time := 1 ns;
-    constant ALUOP_NOT      :   std_logic_vector(3 downto 0) := "0000";
-    constant ALUOP_INC      :   std_logic_vector(3 downto 0) := "0001";
-    constant ALUOP_DEC      :   std_logic_vector(3 downto 0) := "0010";
-    constant ALUOP_ADD      :   std_logic_vector(3 downto 0) := "0011";
-    constant ALUOP_SUB      :   std_logic_vector(3 downto 0) := "0100";
-    constant ALUOP_AND      :   std_logic_vector(3 downto 0) := "0101";
-    constant ALUOP_OR       :   std_logic_vector(3 downto 0) := "0110";
-    constant ALUOP_SHL      :   std_logic_vector(3 downto 0) := "0111";
-    constant ALUOP_SHR      :   std_logic_vector(3 downto 0) := "1000";
+    constant ALUOP_NOP      :   std_logic_vector(3 downto 0) := "0000";
+    constant ALUOP_NOT      :   std_logic_vector(3 downto 0) := "0001";
+    constant ALUOP_INC      :   std_logic_vector(3 downto 0) := "0010";
+    constant ALUOP_DEC      :   std_logic_vector(3 downto 0) := "0011";
+    constant ALUOP_ADD      :   std_logic_vector(3 downto 0) := "0100";
+    constant ALUOP_SUB      :   std_logic_vector(3 downto 0) := "0101";
+    constant ALUOP_AND      :   std_logic_vector(3 downto 0) := "0110";
+    constant ALUOP_OR       :   std_logic_vector(3 downto 0) := "0111";
+    constant ALUOP_SHL      :   std_logic_vector(3 downto 0) := "1000";
+    constant ALUOP_SHR      :   std_logic_vector(3 downto 0) := "1001";
+    constant ALUOP_PASSB    :   std_logic_vector(3 downto 0) := "1010";
+    constant ALUOP_PASSA    :   std_logic_vector(3 downto 0) := "1011";
     
 end package;
