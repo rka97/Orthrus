@@ -16,20 +16,31 @@ entity RegisterFile is
         reset   :   in std_logic;
 
         -- Port 1 signals
-        read_1      :   in std_logic;
-        write_1     :   in std_logic;
-        sel_read_1  :   in std_logic_vector(L_BITS-1 downto 0);
-        sel_write_1 :   in std_logic_vector(L_BITS-1 downto 0);
-        data_in_1   :   in std_logic_vector(W-1 downto 0);
-        data_out_1  :   out std_logic_vector(W-1 downto 0);
+        read_1_1        :   in std_logic;
+        sel_read_1_1    :   in std_logic_vector(L_BITS-1 downto 0);
+        data_out_1_1    :   out std_logic_vector(W-1 downto 0);
+
+        read_1_2        :   in std_logic;
+        sel_read_1_2    :   in std_logic_vector(L_BITS-1 downto 0);
+        data_out_1_2    :   out std_logic_vector(W-1 downto 0);
+
+        write_1         :   in std_logic;
+        sel_write_1     :   in std_logic_vector(L_BITS-1 downto 0);
+        data_in_1       :   in std_logic_vector(W-1 downto 0);
+
 
         -- Port 2 signals
-        read_2      :   in std_logic;
-        write_2     :   in std_logic;
-        sel_read_2  :   in std_logic_vector(L_BITS-1 downto 0);
-        sel_write_2 :   in std_logic_vector(L_BITS-1 downto 0);
-        data_in_2   :   in std_logic_vector(W-1 downto 0);
-        data_out_2  :   out std_logic_vector(W-1 downto 0)
+        read_2_1        :   in std_logic;
+        sel_read_2_1    :   in std_logic_vector(L_BITS-1 downto 0);
+        data_out_2_1    :   out std_logic_vector(W-1 downto 0);
+
+        read_2_2        :   in std_logic;
+        sel_read_2_2    :   in std_logic_vector(L_BITS-1 downto 0);
+        data_out_2_2    :   out std_logic_vector(W-1 downto 0);
+
+        write_2         :   in std_logic;
+        sel_write_2     :   in std_logic_vector(L_BITS-1 downto 0);
+        data_in_2       :   in std_logic_vector(W-1 downto 0)
     );
 end RegisterFile;
 
@@ -42,8 +53,11 @@ architecture Behavioral of RegisterFile is
     signal addr_write_1 : integer;
     signal addr_write_2 : integer;
     begin
-        data_out_1 <= (others => '0') when read_1 = '0' else register_outputs(to_integer(unsigned(sel_read_1)));
-        data_out_2 <= (others => '0') when read_2 = '0' else register_outputs(to_integer(unsigned(sel_read_2)));
+        data_out_1_1 <= (others => '0') when read_1_1 = '0' else register_outputs(to_integer(unsigned(sel_read_1_1)));
+        data_out_1_2 <= (others => '0') when read_1_2 = '0' else register_outputs(to_integer(unsigned(sel_read_1_2)));
+        data_out_2_1 <= (others => '0') when read_2_1 = '0' else register_outputs(to_integer(unsigned(sel_read_2_1)));
+        data_out_2_2 <= (others => '0') when read_2_2 = '0' else register_outputs(to_integer(unsigned(sel_read_2_2)));
+
         addr_write_1 <= to_integer(unsigned(sel_write_1));
         addr_write_2 <= to_integer(unsigned(sel_write_2));
 
