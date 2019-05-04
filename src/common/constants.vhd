@@ -48,4 +48,6 @@ package Constants is
     constant ALUOP_PASSB    :   std_logic_vector(3 downto 0) := "1010";
     constant ALUOP_PASSA    :   std_logic_vector(3 downto 0) := "1011";
     
+    constant N : natural := 16;
+    constant M : natural := 16;
 end package;
