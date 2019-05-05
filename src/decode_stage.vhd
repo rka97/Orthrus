@@ -56,9 +56,9 @@ entity DecodeStage is
         push_addr_2     :   out std_logic_vector(M-1 downto 0);
 
         -- Data that would be pushed to memory in case of pushing two words.
-        push_double_1   :   out std_logic;
+        -- push_double_1   :   out std_logic;
         data_to_push_1  :   out std_logic_vector(2*N-1 downto 0);
-        push_double_2   :   out std_logic;
+        -- push_double_2   :   out std_logic;
         data_to_push_2  :   out std_logic_vector(2*N-1 downto 0)
     );
 end DecodeStage;
@@ -79,6 +79,7 @@ architecture Behavioral of DecodeStage is
 
     signal will_branch_1 : std_logic;
     signal will_branch_2 : std_logic;
+    signal push_double_1, push_double_2 : std_logic;
 
     signal sp_load_in : std_logic;
     signal sp_data : std_logic_vector(M-1 downto 0);
@@ -87,8 +88,8 @@ architecture Behavioral of DecodeStage is
     signal sp_data_incremented : std_logic_vector(M-1 downto 0);
     signal sp_data_reg : std_logic_vector(M-1 downto 0);
     begin
-        control_word_1 <= cw_data_1(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 0 => '0');
-        control_word_2 <= cw_data_2(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 0 => '0');
+        control_word_1 <= cw_data_1(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 1 => '0') & push_double_1;
+        control_word_2 <= cw_data_2(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 1 => '0') & push_double_2;
 
         rt1_addr <= cw_data_1(2*N-5 downto 2*N-L_BITS-4);
         rs1_addr <= cw_data_1(2*N-L_BITS-5 downto 2*N-2*L_BITS-4);
@@ -212,7 +213,8 @@ architecture Behavioral of DecodeStage is
                 RET_Op => cw_data_1(2*N-2*L_BITS-19),
                 ITR_Op => cw_data_1(2*N-2*L_BITS-20),
                 In_Op => cw_data_1(2*N-2*L_BITS-21),
-                LDM_Op => cw_data_1(2*N-2*L_BITS-22)
+                LDM_Op => cw_data_1(2*N-2*L_BITS-22),
+                Pop_Op => cw_data_1(2*N-2*L_BITS-23)
             );
 
         decode_unit_2 : entity orthrus.DecodeUnit
@@ -238,7 +240,8 @@ architecture Behavioral of DecodeStage is
                 RET_Op => cw_data_2(2*N-2*L_BITS-19),
                 ITR_Op => cw_data_2(2*N-2*L_BITS-20),
                 In_Op => cw_data_2(2*N-2*L_BITS-21),
-                LDM_Op => cw_data_2(2*N-2*L_BITS-22)
+                LDM_Op => cw_data_2(2*N-2*L_BITS-22),
+                Pop_Op => cw_data_2(2*N-2*L_BITS-23)
             );
 
         -- TODO: Stack Pointer management.
