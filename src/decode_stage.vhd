@@ -20,13 +20,13 @@ entity DecodeStage is
         -- for the stack pointer
         sp_write        :   in std_logic;
         sp_data_in      :   in std_logic_vector(M-1 downto 0);
-        -- for the register file
+        -- for the register file / from the WB stage
         rf_write_1      :   in std_logic;
         rf_write_1_addr :   in std_logic_vector(L_BITS-1 downto 0);
-        rf_data_in_1    :   in std_logic_vector(M-1 downto 0);
+        rf_data_in_1    :   in std_logic_vector(N-1 downto 0);
         rf_write_2      :   in std_logic;
         rf_write_2_addr :   in std_logic_vector(L_BITS-1 downto 0);
-        rf_data_in_2    :   in std_logic_vector(M-1 downto 0);
+        rf_data_in_2    :   in std_logic_vector(N-1 downto 0);
 
         -- Input data
         inport_data_in  :   in std_logic_vector(N-1 downto 0);
@@ -53,25 +53,20 @@ entity DecodeStage is
         
         -- Addresses to push to when RS/RT are too small for the address to fit (like with PUSH/POP).
         push_addr_1     :   out std_logic_vector(M-1 downto 0);
-        push_addr_2     :   out std_logic_vector(M-1 downto 0);
-
-        -- Data that would be pushed to memory in case of pushing two words.
-        -- push_double_1   :   out std_logic;
-        data_to_push_1  :   out std_logic_vector(2*N-1 downto 0);
-        -- push_double_2   :   out std_logic;
-        data_to_push_2  :   out std_logic_vector(2*N-1 downto 0)
+        push_addr_2     :   out std_logic_vector(M-1 downto 0)
     );
 end DecodeStage;
 
 architecture Behavioral of DecodeStage is
+    -- Register File signals
     signal rs1_read, rt1_read : std_logic;
     signal rs1_addr, rt1_addr : std_logic_vector(L_BITS-1 downto 0); 
     signal rf_rs1_data, rf_rt1_data : std_logic_vector(N-1 downto 0);
-
     signal rs2_read, rt2_read : std_logic;
     signal rs2_addr, rt2_addr : std_logic_vector(L_BITS-1 downto 0); 
     signal rf_rs2_data, rf_rt2_data : std_logic_vector(N-1 downto 0);
 
+    -- Control Word 
     signal cw_data_1, cw_data_2 : std_logic_vector(2*N-1 downto 0);
 
     signal IR1_Op, IR2_Op : std_logic_vector(4 downto 0);
@@ -79,8 +74,8 @@ architecture Behavioral of DecodeStage is
 
     signal will_branch_1 : std_logic;
     signal will_branch_2 : std_logic;
-    signal push_double_1, push_double_2 : std_logic;
 
+    -- Stack pointer management
     signal sp_load_in : std_logic;
     signal sp_data : std_logic_vector(M-1 downto 0);
     signal sp_subtract : std_logic;
@@ -88,18 +83,18 @@ architecture Behavioral of DecodeStage is
     signal sp_data_incremented : std_logic_vector(M-1 downto 0);
     signal sp_data_reg : std_logic_vector(M-1 downto 0);
     begin
-        control_word_1 <= cw_data_1(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 1 => '0') & push_double_1;
-        control_word_2 <= cw_data_2(2*N-1 downto 2*N-2*L_BITS-22) & (2*N-2*L_BITS-23 downto 1 => '0') & push_double_2;
+        control_word_1 <= cw_data_1(31 downto 3) & "00" & cw_data_1(0);
+        control_word_2 <= cw_data_2(31 downto 3) & "00" & cw_data_2(0);
 
-        rt1_addr <= cw_data_1(2*N-5 downto 2*N-L_BITS-4);
-        rs1_addr <= cw_data_1(2*N-L_BITS-5 downto 2*N-2*L_BITS-4);
-        rt2_addr <= cw_data_2(2*N-5 downto 2*N-L_BITS-4);
-        rs2_addr <= cw_data_2(2*N-L_BITS-5 downto 2*N-2*L_BITS-4);
+        rt1_addr <= cw_data_1(27 downto 25);
+        rs1_addr <= cw_data_1(24 downto 22);
+        rt2_addr <= cw_data_2(27 downto 25);
+        rs2_addr <= cw_data_2(24 downto 22);
         
-        In_Op_1 <= cw_data_1(2*N-2*L_BITS-21);
-        In_Op_2 <= cw_data_2(2*N-2*L_BITS-21);
-        LDM_Op_1 <= cw_data_1(2*N-2*L_BITS-22);
-        LDM_Op_2 <= cw_data_2(2*N-2*L_BITS-22);
+        In_Op_1 <= cw_data_1(11);
+        In_Op_2 <= cw_data_2(11);
+        LDM_Op_1 <= cw_data_1(10);
+        LDM_Op_2 <= cw_data_2(10);
 
         IR1_Op <= IR1(2*N-1 downto 2*N-5);
         IR2_Op <= IR2(2*N-1 downto 2*N-5);
@@ -137,12 +132,6 @@ architecture Behavioral of DecodeStage is
         push_addr_2 <= sp_data when IR2_Op = INST_PUSH or IR2_Op = INST_CALL or IR2_Op = INST_ITR else 
                        sp_data_incremented when IR2_Op = INST_POP or IR2_Op = INST_RET or IR2_Op = INST_RTI else 
                        (others => '0');
-        
-        
-        push_double_1 <= '1' when IR1_Op = INST_CALL or IR1_Op = INST_ITR else '0';
-        data_to_push_1 <= new_pc when IR1_Op = INST_CALL or IR1_Op = INST_ITR else (others => '0');
-        push_double_2 <= '1' when IR2_Op = INST_CALL or IR2_Op = INST_ITR else '0';
-        data_to_push_2 <= new_pc when IR2_Op = INST_CALL or IR2_Op = INST_ITR else (others => '0');
         
         -- For managing the stack pointer
         sp_data <= sp_data_in when sp_write = '1' else sp_data_reg;
@@ -194,54 +183,58 @@ architecture Behavioral of DecodeStage is
             generic map ( N => N, L_BITS => L_BITS)
             port map (
                 IR => IR1,
-                ALUOp => cw_data_1(2*N-1 downto 2*N-4), -- 31 downto 28
+                ALUOp => cw_data_1(31 downto 28),
                 rt_read => rt1_read,
-                RTAddr => cw_data_1(2*N-5 downto 2*N-L_BITS-4), -- 27 downto 2*N-5 - N_BITS + 1 = 2*N-4-L_bits
+                RTAddr => cw_data_1(27 downto 25),
                 rs_read => rs1_read,
-                RSAddr => cw_data_1(2*N-L_BITS-5 downto 2*N-2*L_BITS-4),
-                ShiftAmt => cw_data_1(2*N-2*L_BITS-5 downto 2*N-2*L_BITS-8),
-                WBReg => cw_data_1(2*N-2*L_BITS-9),
-                RestoreFlags => cw_data_1(2*N-2*L_BITS-10),
-                UpdateFlags => cw_data_1(2*N-2*L_BITS-11),
-                SETC_Op => cw_data_1(2*N-2*L_BITS-12),
-                CLRC_Op => cw_data_1(2*N-2*L_BITS-13),
-                Out_Op => cw_data_1(2*N-2*L_BITS-14),
-                Push_Op => cw_data_1(2*N-2*L_BITS-15),
-                Load_Op => cw_data_1(2*N-2*L_BITS-16),
-                STD_Op => cw_data_1(2*N-2*L_BITS-17),
-                Call_Op => cw_data_1(2*N-2*L_BITS-18),
-                RET_Op => cw_data_1(2*N-2*L_BITS-19),
-                ITR_Op => cw_data_1(2*N-2*L_BITS-20),
-                In_Op => cw_data_1(2*N-2*L_BITS-21),
-                LDM_Op => cw_data_1(2*N-2*L_BITS-22),
-                Pop_Op => cw_data_1(2*N-2*L_BITS-23)
+                RSAddr => cw_data_1(24 downto 22),
+                WBReg => cw_data_1(21),
+                Out_Op => cw_data_1(20),
+                Push_Op => cw_data_1(19),
+                Pop_Op => cw_data_1(18),
+                Load_Op => cw_data_1(17),
+                STD_Op => cw_data_1(16),
+                Call_Op => cw_data_1(15),
+                RET_Op => cw_data_1(14),
+                RestoreFlags => cw_data_1(13),
+                ITR_Op => cw_data_1(12),
+                In_Op => cw_data_1(11),
+                LDM_Op => cw_data_1(10),
+                UpdateFlags => cw_data_1(9),
+                SETC_Op => cw_data_1(8),
+                CLRC_Op => cw_data_1(7),
+                ShiftAmt => cw_data_1(6 downto 3),
+                -- cw_data_1(2) and cw_data_1(1) are free.
+                push_double => cw_data_1(0)
             );
 
         decode_unit_2 : entity orthrus.DecodeUnit
             generic map ( N => N, L_BITS => L_BITS)
             port map (
                 IR => IR2,
-                ALUOp => cw_data_2(2*N-1 downto 2*N-4), -- 31 downto 28
+                ALUOp => cw_data_2(31 downto 28),
                 rt_read => rt2_read,
-                RTAddr => cw_data_2(2*N-5 downto 2*N-L_BITS-4), -- 27 downto 2*N-5 - N_BITS + 1 = 2*N-4-L_bits
+                RTAddr => cw_data_2(27 downto 25),
                 rs_read => rs2_read,
-                RSAddr => cw_data_2(2*N-L_BITS-5 downto 2*N-2*L_BITS-4),
-                ShiftAmt => cw_data_2(2*N-2*L_BITS-5 downto 2*N-2*L_BITS-8),
-                WBReg => cw_data_2(2*N-2*L_BITS-9),
-                RestoreFlags => cw_data_2(2*N-2*L_BITS-10),
-                UpdateFlags => cw_data_2(2*N-2*L_BITS-11),
-                SETC_Op => cw_data_2(2*N-2*L_BITS-12),
-                CLRC_Op => cw_data_2(2*N-2*L_BITS-13),
-                Out_Op => cw_data_2(2*N-2*L_BITS-14),
-                Push_Op => cw_data_2(2*N-2*L_BITS-15),
-                Load_Op => cw_data_2(2*N-2*L_BITS-16),
-                STD_Op => cw_data_2(2*N-2*L_BITS-17),
-                Call_Op => cw_data_2(2*N-2*L_BITS-18),
-                RET_Op => cw_data_2(2*N-2*L_BITS-19),
-                ITR_Op => cw_data_2(2*N-2*L_BITS-20),
-                In_Op => cw_data_2(2*N-2*L_BITS-21),
-                LDM_Op => cw_data_2(2*N-2*L_BITS-22),
-                Pop_Op => cw_data_2(2*N-2*L_BITS-23)
+                RSAddr => cw_data_2(24 downto 22),
+                WBReg => cw_data_2(21),
+                Out_Op => cw_data_2(20),
+                Push_Op => cw_data_2(19),
+                Pop_Op => cw_data_2(18),
+                Load_Op => cw_data_2(17),
+                STD_Op => cw_data_2(16),
+                Call_Op => cw_data_2(15),
+                RET_Op => cw_data_2(14),
+                RestoreFlags => cw_data_2(13),
+                ITR_Op => cw_data_2(12),
+                In_Op => cw_data_2(11),
+                LDM_Op => cw_data_2(10),
+                UpdateFlags => cw_data_2(9),
+                SETC_Op => cw_data_2(8),
+                CLRC_Op => cw_data_2(7),
+                ShiftAmt => cw_data_2(6 downto 3),
+                -- cw_data_2(2) and cw_data_2(1) are free.
+                push_double => cw_data_2(0)
             );
 
         -- TODO: Stack Pointer management.
