@@ -48,13 +48,11 @@ architecture bhv of MemoryUnit is
         LOADop,
         STDop,
         CALLop,
-        RETop,
-        INTop, --NOTE? shouldnt be this the old pc
-        LDMop) <= CW(8 downto 1);
+        RETop)<= CW(19 downto 14);
+        INTop <= CW(12); --NOTE? shouldnt be this the old pc
+        LDMop <= CW(10);
 
-        --Set M_Rqst_r
-
-            
+        --Set M_Rqst
         M_Rqst_r<= '1' when (POPop ='1' or LOADop ='1' or RETop ='1' or LDMop='1')
         else '0';
 
