@@ -68,7 +68,7 @@ def assemble(file_name):
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + \
                 "000" + \
-                binary_repr(int(words[2]), width=5)
+                binary_repr(int(words[2]), width=4)
             logger.info("At address " + current_addr_str +
                         ": " + words[0] + " " + words[1] + " " + words[2])
             print(len(memory[current_addr]))

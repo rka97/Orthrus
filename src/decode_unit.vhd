@@ -4,7 +4,6 @@ use ieee.numeric_std.all;
 library orthrus;
 use orthrus.Constants.all;
 
--- TODO: Use the generics instead of hardcoded addresses.
 entity DecodeUnit is
     generic (
         N : natural := 16; -- number of bits in word
@@ -17,29 +16,32 @@ entity DecodeUnit is
         RTAddr          :   out std_logic_vector(L_BITS-1 downto 0);
         rs_read         :   out std_logic;
         RSAddr          :   out std_logic_vector(L_BITS-1 downto 0);
-        ShiftAmt        :   out std_logic_vector(3 downto 0);
         WBReg           :   out std_logic;
-        RestoreFlags    :   out std_logic;
-        UpdateFlags     :   out std_logic;
-        SETC_Op         :   out std_logic;
-        CLRC_Op         :   out std_logic;
         Out_Op          :   out std_logic;
         Push_Op         :   out std_logic;
+        Pop_Op          :   out std_logic;
         Load_Op         :   out std_logic;
         STD_Op          :   out std_logic;
         Call_Op         :   out std_logic;
         RET_Op          :   out std_logic;
+        RestoreFlags    :   out std_logic;
         ITR_Op          :   out std_logic;
         In_Op           :   out std_logic;
         LDM_Op          :   out std_logic;
-        Pop_Op          :   out std_logic
+        UpdateFlags     :   out std_logic;
+        SETC_Op         :   out std_logic;
+        CLRC_Op         :   out std_logic;
+        ShiftAmt        :   out std_logic_vector(3 downto 0);
+        push_double     :   out std_logic
     );
 end DecodeUnit;
 
 architecture Behavioral of DecodeUnit is
     signal IR_Op : std_logic_vector(4 downto 0);
+    signal IR_short : std_logic_vector(15 downto 0); 
     begin
-        IR_Op <= IR(N-1 downto N-5);
+        IR_Op <= IR(31 downto 27);
+        IR_short <= IR(31 downto 16);
         ALUOp <= ALUOP_NOT when IR_Op = INST_NOT else
                  ALUOP_INC when IR_Op = INST_INC else
                  ALUOP_DEC when IR_Op = INST_DEC else
@@ -68,16 +70,17 @@ architecture Behavioral of DecodeUnit is
         LDM_Op <= '1' when IR_Op = INST_LDM else '0';
         Pop_Op <= '1' when IR_Op = INST_POP else '0';
         RestoreFlags <= '1' when IR_Op = INST_RET else '0';
+        push_double <= '1' when IR_Op = INST_CALL or IR_Op = INST_ITR else '0';
 
         -- Combinational process that computes RTAddr, RSAddr, WBReg, RestoreFlags, and UpdateFlags.
-        comp_control : process(IR_Op, IR)
+        comp_control : process(IR_Op, IR, IR_short)
         begin
             ShiftAmt <= (others => '0');
             if IR_Op = INST_NOT or IR_Op = INST_INC or IR_Op = INST_DEC then
                 -- ALUOp <= ALUOP_INC;
                 RSAddr <= (others => '0');
                 rs_read <= '0';
-                RTAddr <= IR(10 downto 8);
+                RTAddr <= IR_short(10 downto 8);
                 rt_read <= '1';
                 WBReg <= '1';
                 UpdateFlags <= '1';
@@ -85,15 +88,15 @@ architecture Behavioral of DecodeUnit is
                 -- ALUOp <= ALUOP_PASSB;
                 RSAddr <= (others => '0');
                 rs_read <= '0';
-                RTAddr <= IR(10 downto 8);
+                RTAddr <= IR_short(10 downto 8);
                 rt_read <= '1';
                 WBReg <= '0';
                 UpdateFlags <= '0';
             elsif IR_Op = INST_STD then
                 -- ALUOp <= ALUOP_PASSA;
-                RSAddr <= IR(10 downto 8);
+                RSAddr <= IR_short(10 downto 8);
                 rs_read <= '1';
-                RTAddr <= IR(7 downto 5);
+                RTAddr <= IR_short(7 downto 5);
                 rt_read <= '1';
                 WBReg <= '0';
                 UpdateFlags <= '0';
@@ -101,31 +104,31 @@ architecture Behavioral of DecodeUnit is
                 -- ALUOp <= ALUOP_PASSB;
                 RSAddr <= (others => '0');
                 rs_read <= '0';
-                RTAddr <= IR(10 downto 8);
+                RTAddr <= IR_short(10 downto 8);
                 rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '0';
             elsif IR_Op = INST_LDD then
                 -- ALUOp <= ALUOP_PASSA
-                RSAddr <= IR(10 downto 8);
+                RSAddr <= IR_short(10 downto 8);
                 rs_read <= '1';
-                RTAddr <= IR(7 downto 5);
+                RTAddr <= IR_short(7 downto 5);
                 rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '0';
             elsif IR_Op = INST_MOV then
                 -- ALUOp <= ALUOP_PASSA;
-                RSAddr <= IR(10 downto 8);
+                RSAddr <= IR_short(10 downto 8);
                 rs_read <= '1';
-                RTAddr <= IR(7 downto 5);
+                RTAddr <= IR_short(7 downto 5);
                 rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '0';
             elsif IR_Op = INST_SUB or IR_Op = INST_ADD or IR_Op = INST_AND or IR_Op = INST_OR then
                 -- ALUOp <= ALUOP_SUB;
-                RSAddr <= IR(10 downto 8);
+                RSAddr <= IR_short(10 downto 8);
                 rs_read <= '1';
-                RTAddr <= IR(7 downto 5);
+                RTAddr <= IR_short(7 downto 5);
                 rt_read <= '1';
                 WBReg <= '1';
                 UpdateFlags <= '1';
@@ -133,16 +136,16 @@ architecture Behavioral of DecodeUnit is
                 -- ALUOp <= ALUOP_SHL;
                 RSAddr <= (others => '0');
                 rs_read <= '0';
-                RTAddr <= IR(10 downto 8);
+                RTAddr <= IR_short(10 downto 8);
                 rt_read <= '1';
                 WBReg <= '1';
                 UpdateFlags <= '1';
-                ShiftAmt <= IR(4 downto 1);
+                ShiftAmt <= IR_short(4 downto 1);
             elsif IR_Op = INST_JZ or IR_Op = INST_JN or IR_Op = INST_JC or IR_Op = INST_JMP or IR_Op = INST_CALL THEN
                 -- ALUOp <= ALUOP_NOP;
                 RSAddr <= (others => '0');
                 rs_read <= '0';
-                RTAddr <= IR(10 downto 8);
+                RTAddr <= IR_short(10 downto 8);
                 rt_read <= '1';
                 WBReg <= '0';
                 UpdateFlags <= '0';
