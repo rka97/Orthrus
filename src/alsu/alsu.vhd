@@ -63,7 +63,8 @@ architecture structural of alsu is
         temp_F <=   lu_F when Sel(3 downto 2) = "00" else
                     au_F when Sel(3 downto 2) = "01" else
                     su_F when Sel(3 downto 1) = "100" else
-                    A when Sel(3 downto 0) = "1010";
+                    B when Sel(3 downto 0) = "1010"else
+                    A when Sel(3 downto 0) = "1011";
         F <= temp_F;
 
 end structural;
