@@ -66,8 +66,8 @@ begin
     mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
     read_mem <= '1' when reset = '0' and stall = '0' else '0';
 
-    instr1_op <= mem_data_in(2*N-1 downto 2*N-5);
-    instr2_op <= mem_data_in(N-1 downto N-5);
+    instr1_op <= mem_data_in(N-1 downto N-5);
+    instr2_op <= mem_data_in(2*N-1 downto 2*N-5);
 
     instr1 <= mem_data_in(N-1 downto 0); -- first instruction
     instr2 <= mem_data_in(2*N-1 downto N); -- second instruction
