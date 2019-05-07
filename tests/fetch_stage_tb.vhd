@@ -28,6 +28,7 @@ begin
             clk => clk,
             read_in => read_mem,
             write_in => write_mem,
+            write_double_in => '0',
             address_in => address,
             data_in => data_into_mem,
             data_out => data_outof_mem

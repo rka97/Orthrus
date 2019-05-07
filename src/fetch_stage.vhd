@@ -43,6 +43,7 @@ architecture Behavioral of FetchStage is
     signal instr2_op        : std_logic_vector(4 downto 0);
     signal instr1           : std_logic_vector(N-1 downto 0);
     signal instr2           : std_logic_vector(N-1 downto 0);  
+    signal not_clk          : std_logic;
     constant NOP_FULL       : std_logic_vector(2*N-1 downto 0) := INST_NOP & (2*N-6 downto 0 => '0');
     
     function UsesMemory (
@@ -67,15 +68,18 @@ architecture Behavioral of FetchStage is
         end if;
     end IsBranch;
 begin
+    not_clk <= not(clk);
+
     PC_inst : entity orthrus.Reg
         generic map ( n => M )
         port map (
-            clk => clk, d => pc_data_in, q => pc_data_out,
+            clk => not_clk, d => pc_data_in, q => pc_data_out,
             rst_data => RESET_ADDR, load => pc_load, reset => reset
         );
     
     mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
-    read_mem <= '1' when reset = '0' and stall = '0' else '0';
+    -- read_mem <= '1' when reset = '0' and stall = '0' else '0';
+    read_mem <= '1' when reset = '0' else '0'; -- MUX the stall outside.
 
     instr1_op <= mem_data_in(N-1 downto N-5);
     instr2_op <= mem_data_in(2*N-1 downto 2*N-5);
@@ -143,7 +147,7 @@ begin
             pc_data_in <= branch_address;
         elsif wpc1_write = '1' or wpc2_write = '1' then -- Take the PC address from the memory directly.
             pc_load <= '1';
-            pc_data_in <= mem_data_in(2*N-1 downto M);
+            pc_data_in <= mem_data_in(M-1 downto 0);
         else -- Take the incremented PC normally.
             pc_load <= '1';
             pc_data_in <= incremented_pc;

@@ -7,7 +7,7 @@ LDM R0, 201     # R0=201 (C9h)
 LDM R1, 5     # R1=5 (5h)
 LDM R2, 200     # R6=200 (C8h)
 IN R3 # should load 7, R3 <= F127h
-NOP
+LDD R4, R5 # should get R4 <= 0h
 NOP
 NOP
 NOP

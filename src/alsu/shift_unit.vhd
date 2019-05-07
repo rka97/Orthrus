@@ -21,7 +21,7 @@ architecture behavioral of shift_unit is
         -- N-Imm_signal <= std_logic_vector(unsigned(N) - unsigned(Imm));
         process(Sel, A, Cin)
         begin
-            if (Imm >= "0000") then 
+            if not(Imm = "0000") then 
                 if (Sel = '0') then --shift left
                     Cout <= A(N-to_integer(unsigned(Imm)));
                     F <= A(N-to_integer(unsigned(Imm))-1 downto 0) & (to_integer(unsigned(Imm))-1 downto 0 => '0');
@@ -30,7 +30,8 @@ architecture behavioral of shift_unit is
                     F <= (to_integer(unsigned(Imm))-1 downto 0 => '0') & A(N-1 downto to_integer(unsigned(Imm)));
                 end if;
             else
-                Cout <= '0';           
+                Cout <= '0';      
+                F <= A;     
             end if;
         end process;
 end behavioral;

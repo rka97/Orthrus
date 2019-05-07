@@ -8,6 +8,7 @@ entity Ram is
 		clk 					: in std_logic; -- the clock
 		read_in					: in std_logic;
 		write_in 				: in std_logic;
+		write_double_in			: in std_logic;
 		address_in              : in std_logic_vector(15 downto 0); -- 256 addresses.
 		data_in                 : in std_logic_vector(31 downto 0);
 		data_out                : out std_logic_vector(31 downto 0));
@@ -38,12 +39,16 @@ architecture Behavioral of Ram is
 	);
 	begin
 		-- Inputs data into the RAM on the falling edge of the clock.
-		process(clk) is
+		process(clk, write_in, write_double_in) is
 			begin
 				if falling_edge(clk) then  
 					if write_in = '1' then
-						ram(to_integer(unsigned(address_in))) <= data_in(15 downto 0);
-						ram(to_integer(unsigned(address_in) + 1)) <= data_in(31 downto 16);
+						if write_double_in = '0' then
+							ram(to_integer(unsigned(address_in))) <= data_in(15 downto 0);
+						else
+							ram(to_integer(unsigned(address_in))) <= data_in(15 downto 0);
+							ram(to_integer(unsigned(address_in) + 1)) <= data_in(31 downto 16);
+						end if;
 					end if;
 				end if;
 		end process;
