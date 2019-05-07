@@ -15,11 +15,13 @@ architecture TB of ProcessorTB is
     signal mem_address : std_logic_vector(15 downto 0);
     signal data_into_mem : std_logic_vector(31 downto 0);
     signal data_outof_mem : std_logic_vector(31 downto 0);
-    signal inport_data : std_logic_vector(15 downto 0) := (others => 'Z');
+    signal inport_data, outport_data : std_logic_vector(15 downto 0) := (others => 'Z');
 
     signal IR1_buffered, IR2_buffered : std_logic_vector(31 downto 0);
     signal IR1_short, IR2_short : std_logic_vector(15 downto 0);
     signal new_pc_buff_dec : std_logic_vector(M-1 downto 0);
+
+    signal zero_flag, negative_flag, carry_flag : std_logic;
 
     signal branch : std_logic;
     signal branch_address : std_logic_vector(M-1 downto 0);
@@ -45,7 +47,7 @@ architecture TB of ProcessorTB is
             
             interrupt => interrupt,
             inport_data_in => inport_data,
-
+            out_port_data_out => outport_data,
             mem_data_in => data_outof_mem,
             mem_data_out => data_into_mem,
             mem_address_out => mem_address,
@@ -94,6 +96,10 @@ architecture TB of ProcessorTB is
             init_signal_spy("/processortb/Processor_inst/RT2_buff_mem", "processortb/RT2_buff_mem");
             init_signal_spy("/processortb/Processor_inst/push_addr_2_buff_mem", "processortb/push_addr_2_buff_mem");
             init_signal_spy("/processortb/Processor_inst/new_pc_buff_mem", "processortb/new_pc_buff_mem");
+
+            init_signal_spy("/processortb/Processor_inst/zero_flag", "processortb/zero_flag");
+            init_signal_spy("/processortb/Processor_inst/carry_flag", "processortb/carry_flag");
+            init_signal_spy("/processortb/Processor_inst/negative_flag", "processortb/negative_flag");
 
             reset <= '1';
             wait for period / 2;
