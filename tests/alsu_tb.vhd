@@ -11,7 +11,7 @@ architecture tb of alsu_tb is
     signal A : std_logic_vector(15 downto 0) := (others => 'Z');
     signal B : std_logic_vector(15 downto 0) := (others => 'Z');
     signal Cin : std_logic := 'Z';
-    signal Imm : std_logic_vector(15 downto 0):= x"0001";
+    signal Imm : std_logic_vector(3 downto 0):= "0001";
     signal F : std_logic_vector(15 downto 0) := (others => 'Z');
     signal Cout, Zero, Negative : std_logic := 'Z';
 
@@ -36,7 +36,7 @@ architecture tb of alsu_tb is
             -- su
             A <= x"0002";
             Cin <= '0';
-            Imm <= x"0001";
+            Imm <= "0001";
             Sel <= "1000";--SHL
             wait for 1 ns;
             assert(F = X"0004") report "1st SHL failed!";
@@ -46,7 +46,7 @@ architecture tb of alsu_tb is
             assert(F = X"0001") report "2st SHR failed!";
             A <= x"9000";
             Cin <= '0';
-            Imm <= x"0003";
+            Imm <= "0011";
             Sel <= "1000";--SHL
             wait for 1 ns;
             assert(F = X"8000") report "3rd SHL failed!";
