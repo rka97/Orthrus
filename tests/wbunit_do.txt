@@ -1,0 +1,26 @@
+force -freeze sim:/writebackunit/clk 0 0, 1 {50 ns} -r 100
+force -freeze sim:/writebackunit/control_word 32'hFFFFFFFF 0
+force -freeze sim:/writebackunit/alu_res 16'hFFFF 0
+
+force -freeze sim:/writebackunit/mem_data 16'hABAB 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00000000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h02200000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00100000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00080000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00040000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00008000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00004000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h00001000 0
+run
+force -freeze sim:/writebackunit/control_word 32'h06221000 0
+run
+
+
