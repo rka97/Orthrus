@@ -18,8 +18,8 @@ entity DecodeStage is
         -- control signals
         -- stall           :   in std_logic;
         -- for the stack pointer
-        sp_write        :   in std_logic;
-        sp_data_in      :   in std_logic_vector(M-1 downto 0);
+        -- sp_write        :   in std_logic;
+        -- sp_data_in      :   in std_logic_vector(M-1 downto 0);
         -- for the register file / from the WB stage
         rf_write_1      :   in std_logic;
         rf_write_1_addr :   in std_logic_vector(L_BITS-1 downto 0);
@@ -138,7 +138,7 @@ architecture Behavioral of DecodeStage is
                        (others => '0');
         
         -- For managing the stack pointer
-        sp_data <= sp_data_in when sp_write = '1' else sp_data_reg;
+        -- sp_data <= sp_data_in when sp_write = '1' else sp_data_reg;
         sp_data_incremented <= std_logic_vector(unsigned(sp_data) + to_unsigned(sp_increment, M)) when sp_subtract = '0' else std_logic_vector(unsigned(sp_data) - to_unsigned(sp_increment, M));
 
         branch_reg_inst : entity orthrus.Reg
@@ -256,7 +256,8 @@ architecture Behavioral of DecodeStage is
 
         -- TODO: Stack Pointer management.
         -- TODO: refactor this into two smaller blocks + a priority block?
-        comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
+        -- comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
+        comp_new_sp : process(IR2_Op, IR1_Op)
         begin
             if IR2_Op = INST_PUSH then
                 sp_increment <= 1;
@@ -290,10 +291,10 @@ architecture Behavioral of DecodeStage is
                 sp_increment <= 1;
                 sp_subtract <= '0';
                 sp_load_in <= '1';
-            elsif sp_write = '1' then
-                sp_increment <= 0;
-                sp_subtract <= '0';
-                sp_load_in <= '1';
+            -- elsif sp_write = '1' then
+            --     sp_increment <= 0;
+            --     sp_subtract <= '0';
+            --     sp_load_in <= '1';
             else
                 sp_increment <= 0;
                 sp_subtract <= '0';

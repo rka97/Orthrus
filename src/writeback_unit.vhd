@@ -10,7 +10,6 @@ entity WriteBackUnit is
         M   : natural := 16  -- number of bits in memory address
     );
     port (
-        clk                 :   in std_logic;
         -- memory signals
         mem_data            : in std_logic_vector(N-1 downto 0);
 
@@ -19,8 +18,6 @@ entity WriteBackUnit is
       
         -- the IRs and new_pc
         alu_res           : in std_logic_vector(N-1 downto 0);
-        to_sp_write       : out std_logic;
-        to_sp             : out std_logic_vector(N-1 downto 0);
         to_out_port       : out std_logic_vector(N-1 downto 0);
         to_rf_write_data  : out std_logic_vector(N-1 downto 0);
         to_rf_write       : out std_logic;
@@ -51,19 +48,18 @@ architecture Behavioral of WriteBackUnit is
         load_op <= control_word(17);
 
         
-        wb_process : process(clk)
+        wb_process : process(WBreg, load_op, out_op, alu_res, control_word, mem_data)
         begin
             if WBreg = '1' and load_op = '0' then
                 to_rf_write <= '1';
                 to_rf_write_data <= alu_res;
                 to_rf_write_sel <= control_word(27 downto 25);
-            elsif  WBreg = '1' and load_op = '1' then
+            elsif WBreg = '1' and load_op = '1' then
                 to_rf_write <= '1';
                 to_rf_write_data <= mem_data;
                 to_rf_write_sel <= control_word(27 downto 25);
             else
-                
-		to_rf_write <= '0';
+		        to_rf_write <= '0';
                 to_rf_write_data <= (others =>'0');
                 to_rf_write_sel <= (others => '0');
 	        end if;
@@ -72,15 +68,6 @@ architecture Behavioral of WriteBackUnit is
 	        else
 		        to_out_port <= (others => '0');
 	        end if;
-            
-            if push_op = '1' or pop_op = '1' or rti_op = '1' or ret_op = '1' or int_op = '1' or call_op ='1' then
-                to_sp_write <= '1';
-                to_sp <= alu_res;
-            else
-                to_sp_write <= '0';
-                to_sp <= (others => '0');
-            
-            end if;
         end process;
 end Behavioral;
             

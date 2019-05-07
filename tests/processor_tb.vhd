@@ -140,8 +140,9 @@ architecture TB of ProcessorTB is
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
             wait for period;
-            -- CHECK LDD VALUE
+            -- LDD In WB
             wait for period;
+            
             assert(IR1_short = INST_ADD & "001" & "000" & "00000") report "IR1 != ADD R1, R0!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
             wait for period;
