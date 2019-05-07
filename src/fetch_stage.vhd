@@ -45,9 +45,9 @@ architecture Behavioral of FetchStage is
     signal instr2           : std_logic_vector(N-1 downto 0);  
     constant NOP_FULL       : std_logic_vector(2*N-1 downto 0) := INST_NOP & (2*N-6 downto 0 => '0');
     
-    function UsesMemory(
-    instr_op : in std_logic_vector)
-    return std_logic is
+    function UsesMemory (
+        instr_op : in std_logic_vector(4 downto 0)
+    ) return std_logic is
     begin
         if (instr_op = INST_PUSH or instr_op = INST_POP or instr_op = INST_LDD or instr_op = INST_STD or instr_op = INST_RET or instr_op = INST_RTI) then
             return '1';
@@ -55,6 +55,17 @@ architecture Behavioral of FetchStage is
             return '0';
         end if;
     end UsesMemory;
+
+    function IsBranch(
+        instr_op : in std_logic_vector(4 downto 0)
+    ) return std_logic is 
+    begin
+        if (instr_op = INST_JMP or instr_op = INST_JZ or instr_op = INST_JN or instr_op = INST_JC or instr_op = INST_CALL or instr_op = INST_RET or instr_op = INST_RTI) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end IsBranch;
 begin
     PC_inst : entity orthrus.Reg
         generic map ( n => M )
@@ -76,13 +87,14 @@ begin
     new_pc <= pc_data_in;
 
     -- Combinational process that computes the new IRs and memory increment given the process.
-    pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2)
+    pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2, branch)
     begin
-        if reset = '1' or stall = '1' then
+        if reset = '1' or stall = '1' or branch = '1' then
             IR1 <= NOP_FULL;
             IR2 <= NOP_FULL;
             increment <= 0;
         elsif interrupt = '1' then
+            -- TODO: make sure interrupt works.
             IR1 <= INST_ITR & (N-6 downto 0 => '0');
             IR2 <= NOP_FULL;
             increment <= 0;
@@ -95,7 +107,9 @@ begin
                 IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
-            elsif instr1_op = INST_CALL then -- If INST1 is a CALL
+            elsif IsBranch(instr1_op) = '1' or IsBranch(instr2_op) = '1' then 
+                -- If INST1 or INST2 is a branch, pass just 1.
+                -- We assume branches always take the first pipe to simplify flushing.
                 IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;

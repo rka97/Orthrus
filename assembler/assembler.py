@@ -34,9 +34,7 @@ def assemble(file_name):
     long_immediate_commands = data["long_immediate_commands"]
     op_codes = data["op_codes"]
     register_codes = data["register_codes"]
-    memory = {
-        0: "0000000000000000"
-    }
+    memory = {}
     # print(one_op_commands)
     while itr < len(clean_lines):
         line = clean_lines[itr]

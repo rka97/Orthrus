@@ -63,6 +63,9 @@ architecture TB of ProcessorTB is
         process is
         begin
             -- ASSUMPTION: SimpleTest.mem should be loaded in by the do file.
+            init_signal_spy("/processortb/Processor_inst/branch", "/processortb/branch");
+            init_signal_spy("/processortb/Processor_inst/branch_address", "/processortb/branch_address");
+
             init_signal_spy("/processortb/Processor_inst/IR1_buffered", "processortb/IR1_buffered");
             init_signal_spy("/processortb/Processor_inst/IR2_buffered", "processortb/IR2_buffered");
             init_signal_spy("/processortb/Processor_inst/new_pc_buffered", "processortb/new_pc_buffered");
@@ -81,6 +84,15 @@ architecture TB of ProcessorTB is
             wait for period / 2;
             -- Fetching started
             wait for period;
+            assert(IR1_short = INST_JMP & "111" & (7 downto 0 => '0')) report "IR1 != JMP R7!";
+            assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
+            assert(branch = '1') report "Branch != 1!";
+            assert(branch_address = (M-1 downto 0 => '0')) report "Branch address != 0!";
+            wait for period;
+            assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP after branching!";
+            -- assert(IR1_short = INST_INC & "110" & (7 downto 0 => '0')) report "IR1 != INC R6!";
+            assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
+            wait for period;
             assert(IR1_buffered = INST_LDM & "000" & "00000000" & X"00C9") report "IR1 != LDM R0, 201!";
             wait for period;
             assert(IR1_buffered = INST_LDM & "001" & "00000000" & X"0005") report "IR1 != LDM R1, 5!";
@@ -88,11 +100,17 @@ architecture TB of ProcessorTB is
             wait for period;
             assert(IR1_buffered = INST_LDM & "010" & "00000000" & X"00C8") report "IR1 != LDM R2, 200!";
             assert(RT1_buff = X"0005") report "RT for LDM R1, 5 is wrong!";
-            wait for period; -- Four NOPs are next!
+            wait for period;
+            inport_data <= X"F127";
+            assert(IR1_short = INST_IN & "011" & (7 downto 0 => '0')) report "IR1 != IN R3, 7";
+            assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP, Pre!!";
+            assert(RT1_buff = X"00C8") report "RT for LDM R2, 200 is wrong!";
+            wait for period;  -- Four NOPs are next!
+            inport_data <= X"FFFF";
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
-            assert(RT1_buff = X"00C8") report "RT for LDM R2, 200 is wrong!";
-            wait for period ;
+            assert(RT1_buff = X"F127") report "IN to RT1 failed!";
+            wait for period;
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
             wait for period;
