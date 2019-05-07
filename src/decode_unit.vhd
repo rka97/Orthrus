@@ -32,6 +32,7 @@ entity DecodeUnit is
         SETC_Op         :   out std_logic;
         CLRC_Op         :   out std_logic;
         ShiftAmt        :   out std_logic_vector(3 downto 0);
+        mem_load        :   out std_logic;
         push_double     :   out std_logic
     );
 end DecodeUnit;
@@ -71,7 +72,8 @@ architecture Behavioral of DecodeUnit is
         Pop_Op <= '1' when IR_Op = INST_POP else '0';
         RestoreFlags <= '1' when IR_Op = INST_RET else '0';
         push_double <= '1' when IR_Op = INST_CALL or IR_Op = INST_ITR else '0';
-
+        mem_load <= '1' when IR_Op = INST_POP or IR_Op = INST_LDD else '0';
+        
         -- Combinational process that computes RTAddr, RSAddr, WBReg, RestoreFlags, and UpdateFlags.
         comp_control : process(IR_Op, IR, IR_short)
         begin

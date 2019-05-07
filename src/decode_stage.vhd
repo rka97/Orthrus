@@ -219,7 +219,8 @@ architecture Behavioral of DecodeStage is
                 SETC_Op => cw_data_1(8),
                 CLRC_Op => cw_data_1(7),
                 ShiftAmt => cw_data_1(6 downto 3),
-                -- cw_data_1(2) and cw_data_1(1) are free.
+                mem_load => cw_data_1(2),
+                -- cw_data_1(1) is free.
                 push_double => cw_data_1(0)
             );
 
@@ -248,7 +249,8 @@ architecture Behavioral of DecodeStage is
                 SETC_Op => cw_data_2(8),
                 CLRC_Op => cw_data_2(7),
                 ShiftAmt => cw_data_2(6 downto 3),
-                -- cw_data_2(2) and cw_data_2(1) are free.
+                mem_load => cw_data_2(2),
+                -- cw_data_2(1) is free.
                 push_double => cw_data_2(0)
             );
 
