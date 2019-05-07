@@ -9,12 +9,13 @@ entity ProcessorTB is
 end ProcessorTB;
 
 architecture TB of ProcessorTB is
-    signal clk, reset, interrupt : std_logic;
+    signal clk, reset, interrupt : std_logic := 'Z';
 
-    signal read_mem, write_mem, write_mem_mode : std_logic;
+    signal read_mem, write_mem, write_mem_mode : std_logic := 'Z';
     signal mem_address : std_logic_vector(15 downto 0);
     signal data_into_mem : std_logic_vector(31 downto 0);
     signal data_outof_mem : std_logic_vector(31 downto 0);
+    signal inport_data : std_logic_vector(15 downto 0) := (others => 'Z');
     constant period : time := 1 ns;
 
     begin
@@ -24,6 +25,7 @@ architecture TB of ProcessorTB is
             reset => reset,
             
             interrupt => interrupt,
+            inport_data_in => inport_data,
 
             mem_data_in => data_outof_mem,
             mem_data_out => data_into_mem,
