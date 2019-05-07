@@ -39,7 +39,18 @@ architecture structure of ExecuteStage is
 
     signal ret_flag_load : std_logic := 'Z';
     signal ret_flag_in, ret_flag_out : std_logic_vector(N-1 downto 0) := (others => '0');
-    
+
+    function ChangesCarry(
+        alu_op : in std_logic_vector(3 downto 0)
+    ) return std_logic is
+    begin
+        if (alu_op = ALUOP_SHL or alu_op = ALUOP_SHR or alu_op = ALUOP_ADD or alu_op = ALUOP_SUB or alu_op = ALUOP_INC or alu_op = ALUOP_DEC) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end ChangesCarry;
+
     begin
         alsu_inst1 : entity orthrus.alsu
             generic map (N => N)
@@ -56,7 +67,8 @@ architecture structure of ExecuteStage is
             );
         flag1(2) <= '1' when Cw_1(8) = '1' else
                     '0' when Cw_1(7) = '1' else
-                    Carryout1;
+                    Carryout1 when ChangesCarry(Cw_1(31 downto 28)) = '1' else
+                    flag_out(2);
 
         alsu_inst2 : entity orthrus.alsu
             generic map (N => N)
@@ -74,7 +86,8 @@ architecture structure of ExecuteStage is
         
         flag2(2) <= '1' when Cw_2(8) = '1' else
                     '0' when Cw_2(7) = '1' else
-                    Carryout2;
+                    Carryout2 when ChangesCarry(Cw_2(31 downto 28)) = '1' else
+                    flag_out(2);
 
         FlagReg_inst : entity orthrus.Reg
             generic map ( n => N )

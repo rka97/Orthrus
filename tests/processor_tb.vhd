@@ -165,7 +165,7 @@ architecture TB of ProcessorTB is
             assert(cw_2_buff_ex(31 downto 28) = ALUOP_SUB and cw_2_buff_ex(27 downto 25) = "010" and cw_2_buff_ex(24 downto 22) = "000" and cw_2_buff_ex(9) = '1') report "CW for SUB R0, R2 is wrong!";
             wait for period;
             -- Ad Done
-            wait for period * 10;
+            wait for period * 200;
         end process;
         
         process is
