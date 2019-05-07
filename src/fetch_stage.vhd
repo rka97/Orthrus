@@ -74,12 +74,14 @@ begin
         generic map ( n => M )
         port map (
             clk => not_clk, d => pc_data_in, q => pc_data_out,
-            rst_data => RESET_ADDR, load => pc_load, reset => reset
+            rst_data => mem_data_in(M-1 downto 0), load => pc_load, reset => reset
         );
     
-    mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
+    mem_address_out <= pc_data_out when reset = '0' and stall = '0' else 
+                       RESET_ADDR  when reset = '1' else (others => '0');
     -- read_mem <= '1' when reset = '0' and stall = '0' else '0';
-    read_mem <= '1' when reset = '0' else '0'; -- MUX the stall outside.
+    -- read_mem <= '1' when reset = '0' else '0'; -- MUX the stall outside.
+    read_mem <= '1';
 
     instr1_op <= mem_data_in(N-1 downto N-5);
     instr2_op <= mem_data_in(2*N-1 downto 2*N-5);

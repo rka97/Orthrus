@@ -16,7 +16,7 @@ end logic_unit;
 
 architecture dataflow of logic_unit is
     begin
-        F <= (others => 'Z') when Sel="00" else --NOP
+        F <= (others => '0') when Sel="00" else --NOP
             not(A) when Sel = "01" else -- NOT A
             A and B when Sel = "10" else --AND
             A or B ;-- OR

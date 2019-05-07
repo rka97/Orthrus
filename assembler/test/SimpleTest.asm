@@ -1,8 +1,21 @@
-.ORG 128
+.ORG 0
+10
+
+.ORG 10
+LDM R7, 128
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
 JMP R7
 INC R6
 
-.ORG 0
+.ORG 128
 LDM R0, 201     # R0=201 (C9h)
 LDM R1, 5     # R1=5 (5h)
 LDM R2, 200     # R6=200 (C8h)

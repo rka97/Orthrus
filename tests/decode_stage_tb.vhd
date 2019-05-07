@@ -114,7 +114,6 @@ begin
         assert(control_word_2(24 downto 22) = "110") report "RS Address for STD is wrong!";
         assert(RS2 = X"FEAC") report "RS value for STD is wrong!";
         wait for period;
-        -- TODO: Test branches (must be tested in tandem with the execution).
         wait for period * 10;
     end process;
 

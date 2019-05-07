@@ -88,6 +88,16 @@ architecture Structural of Processor is
     begin
         not_clk <= not(clk);
 
+        stall_decode <= '0';
+        stall_execute <= '0';
+        stall_mem <= '0';
+        stall_wb <= '0';
+
+        reset_decode_buffer <= reset;
+        reset_ex_buffer <= reset;
+        reset_mem_buffer <= reset;
+        reset_wb_buffer <= reset;
+
         load_decode_buf <= '1' when stall_decode = '0' and reset = '0' else '0';
         load_ex_buf <= '1' when stall_execute = '0' and reset = '0' else '0';
         load_mem_buf <= '1' when stall_mem = '0' and reset = '0' else '0';
@@ -147,7 +157,6 @@ architecture Structural of Processor is
             );
         
         -- Decode Stage instantiations
-        -- TODO: Check what I need to do for DecodeStage's stall to work.
         DecodeStage_inst : entity orthrus.DecodeStage
             generic map ( N => N, M => M, L_BITS => 3 )
             port map (

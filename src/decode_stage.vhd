@@ -255,7 +255,6 @@ architecture Behavioral of DecodeStage is
             );
 
         -- TODO: Stack Pointer management.
-        -- TODO: refactor this into two smaller blocks + a priority block?
         -- comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
         comp_new_sp : process(IR2_Op, IR1_Op)
         begin

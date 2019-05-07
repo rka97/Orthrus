@@ -151,6 +151,13 @@ architecture Behavioral of DecodeUnit is
                 rt_read <= '1';
                 WBReg <= '0';
                 UpdateFlags <= '0';
+            elsif IR_Op = INST_SETC or IR_Op = INST_CLRC then
+                RTAddr <= (others => '0');
+                rt_read <= '0';
+                RSAddr <= (others => '0');
+                rs_read <= '0';
+                WBReg <= '0';
+                UpdateFlags <= '1';
             else
                 -- ALUOp <= ALUOP_NOP;
                 RTAddr <= (others => '0');

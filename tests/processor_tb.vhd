@@ -54,7 +54,6 @@ architecture TB of ProcessorTB is
             write_double_mem => write_double_mem
         );
     
-        -- TODO: give the RAM a single word vs double word mode.
         ram_inst : entity orthrus.ram
             port map (
                 clk => clk,
@@ -102,12 +101,12 @@ architecture TB of ProcessorTB is
             wait for period / 2;
             reset <= '0';
             -- Fetching started
-            wait for period;
+            wait for period * 7;
             wait for period; -- For the delay in values being available
             assert(IR1_short = INST_JMP & "111" & (7 downto 0 => '0')) report "IR1 != JMP R7!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
             assert(branch = '1') report "Branch != 1!";
-            assert(branch_address = (M-1 downto 0 => '0')) report "Branch address != 0!";
+            assert(branch_address = X"0080") report "Branch address != 128!";
             wait for period;
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP after branching!";
             -- assert(IR1_short = INST_INC & "110" & (7 downto 0 => '0')) report "IR1 != INC R6!";
@@ -139,21 +138,27 @@ architecture TB of ProcessorTB is
             -- LDD In MEM
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
+            -- ADD In Fetch
             wait for period;
             -- LDD In WB
+            -- ADD In Decode
             wait for period;
-            
+            -- Add In Execute
             assert(IR1_short = INST_ADD & "001" & "000" & "00000") report "IR1 != ADD R1, R0!";
             assert(IR2_short = INST_NOP & (10 downto 0 => '0')) report "IR2 != NOP!";
             wait for period;
+            -- Add In MEM
             assert(IR1_short = INST_NOP & (10 downto 0 => '0')) report "IR1 != NOP!";
             assert(IR2_short = INST_SUB & "000" & "010" & "00000") report "IR2 != SUB R0, R2!";
             assert(cw_1_buff_ex(31 downto 28) = ALUOP_ADD and cw_1_buff_ex(27 downto 25) = "000" and cw_1_buff_ex(24 downto 22) = "001" and cw_1_buff_ex(9) = '1') report "CW for ADD R1, R0 is wrong!";
             -- assert(RT1_buff_ex = X"00C9") report "RT_ex for ADD R1, R0 is wrong!";
             -- assert(RS1_buff_ex = X"0005") report "RS for ADD R1, R0 is wrong!";
             wait for period;
+            -- Add In WB
             assert(IR1_short = INST_NOT & "001" & (7 downto 0 => '0')) report "IR1 != NOT R1!";
             assert(cw_2_buff_ex(31 downto 28) = ALUOP_SUB and cw_2_buff_ex(27 downto 25) = "010" and cw_2_buff_ex(24 downto 22) = "000" and cw_2_buff_ex(9) = '1') report "CW for SUB R0, R2 is wrong!";
+            wait for period;
+            -- Ad Done
             wait for period * 10;
         end process;
         

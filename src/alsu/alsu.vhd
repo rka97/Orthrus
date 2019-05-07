@@ -57,11 +57,11 @@ architecture structural of alsu is
         Zero <= '1' when (temp_F = (N-1 downto 0 => '0')) else '0';
         Negative <= temp_F(N-1);
         Cout <= au_Cout when Sel(3 downto 2) = "01" else
-                su_Cout when Sel(3 downto 1) = "100";
+                su_Cout when Sel(3 downto 1) = "100" else '0';
 
         temp_F <=   lu_F when Sel(3 downto 2) = "00" else
                     au_F when Sel(3 downto 2) = "01" else
-                    su_F when Sel(3 downto 1) = "100";
+                    su_F when Sel(3 downto 1) = "100" else (others => '0');
                    
         F <=    B when Sel(3 downto 0) = "1010"else
                 A when Sel(3 downto 0) = "1011" else
