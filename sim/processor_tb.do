@@ -1,3 +1,3 @@
 restart -f
-mem load -i assembler/OneOperand.mem /ProcessorTB/ram_inst/ram
+mem load -i assembler/SimpleTest.mem /ProcessorTB/ram_inst/ram
 run
