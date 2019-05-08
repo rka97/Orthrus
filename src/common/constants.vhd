@@ -33,7 +33,7 @@ package Constants is
     constant INST_RTI       :   std_logic_vector(4 downto 0) := "11010";
     constant INST_ITR       :   std_logic_vector(4 downto 0) := "11011";
     constant RESET_ADDR     :   std_logic_vector(15 downto 0) := X"0000";
-    constant SP_RESET_ADDR  :   std_logic_vector(15 downto 0) := X"FFFE";
+    constant SP_RESET_ADDR  :   std_logic_vector(15 downto 0) := X"FFFF";
     -- TODO: implement the reset routine and change the reset address.
     constant CLK_PERIOD     :   time := 1 ns;
     constant ALUOP_NOP      :   std_logic_vector(3 downto 0) := "0000";

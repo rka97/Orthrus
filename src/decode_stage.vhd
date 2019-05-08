@@ -58,6 +58,7 @@ entity DecodeStage is
 end DecodeStage;
 
 architecture Behavioral of DecodeStage is
+    signal not_clk : std_logic;
     -- Register File signals
     signal rs1_read, rt1_read : std_logic;
     signal rs1_addr, rt1_addr : std_logic_vector(L_BITS-1 downto 0); 
@@ -82,10 +83,11 @@ architecture Behavioral of DecodeStage is
     signal sp_subtract : std_logic;
     signal sp_increment : integer range 0 to 2;
     signal sp_data_incremented : std_logic_vector(M-1 downto 0);
-    signal sp_data_reg : std_logic_vector(M-1 downto 0);
+    -- signal sp_data_reg : std_logic_vector(M-1 downto 0);
     begin
-        control_word_1 <= cw_data_1(31 downto 3) & "00" & cw_data_1(0);
-        control_word_2 <= cw_data_2(31 downto 3) & "00" & cw_data_2(0);
+        not_clk <= not(clk);
+        control_word_1 <= cw_data_1(31 downto 0);
+        control_word_2 <= cw_data_2(31 downto 0);
 
         rt1_addr <= cw_data_1(27 downto 25);
         rs1_addr <= cw_data_1(24 downto 22);
@@ -155,11 +157,11 @@ architecture Behavioral of DecodeStage is
         stack_pointer_reg_inst: entity orthrus.Reg
             generic map (n => M)
             port map (
-                clk => clk,
+                clk => not_clk,
                 load => sp_load_in,
                 reset => reset,
                 d => sp_data_incremented,
-                q => sp_data_reg,
+                q => sp_data,
                 rst_data => SP_RESET_ADDR
             );
         
@@ -220,7 +222,7 @@ architecture Behavioral of DecodeStage is
                 CLRC_Op => cw_data_1(7),
                 ShiftAmt => cw_data_1(6 downto 3),
                 mem_load => cw_data_1(2),
-                -- cw_data_1(1) is free.
+                RTI_Op => cw_data_1(1),
                 push_double => cw_data_1(0)
             );
 
@@ -250,7 +252,7 @@ architecture Behavioral of DecodeStage is
                 CLRC_Op => cw_data_2(7),
                 ShiftAmt => cw_data_2(6 downto 3),
                 mem_load => cw_data_2(2),
-                -- cw_data_2(1) is free.
+                RTI_Op => cw_data_2(1),
                 push_double => cw_data_2(0)
             );
 

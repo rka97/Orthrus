@@ -41,7 +41,7 @@ architecture Behavioral of WriteBackUnit is
         WBreg <= control_word(21);
         push_op <= control_word(19);
         pop_op <= control_word(18);
-        rti_op <= control_word(14);  -- both rti and ret are the same?
+        rti_op <= control_word(1);
         ret_op <= control_word(14);
         int_op <= control_word(12);
         call_op <= control_word(15);
@@ -50,11 +50,11 @@ architecture Behavioral of WriteBackUnit is
         
         wb_process : process(WBreg, load_op, out_op, alu_res, control_word, mem_data)
         begin
-            if WBreg = '1' and load_op = '0' then
+            if WBreg = '1' and load_op = '0' and pop_op = '0' then
                 to_rf_write <= '1';
                 to_rf_write_data <= alu_res;
                 to_rf_write_sel <= control_word(27 downto 25);
-            elsif WBreg = '1' and load_op = '1' then
+            elsif WBreg = '1' and (load_op = '1' or pop_op = '1') then
                 to_rf_write <= '1';
                 to_rf_write_data <= mem_data;
                 to_rf_write_sel <= control_word(27 downto 25);

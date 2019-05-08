@@ -39,6 +39,7 @@ architecture bhv of MemoryUnit is
     signal CALLop: std_logic;
     signal RETop : std_logic;
     signal INTop: std_logic;
+    signal RTIop : std_logic;
 
     begin
         -- Specify needed signals
@@ -49,6 +50,7 @@ architecture bhv of MemoryUnit is
         CALLop,
         RETop)<= CW(19 downto 14);
         INTop <= CW(12); --NOTE? shouldnt be this the old pc
+        RTIop <= CW(1);
 
         --Set M_Rqst
         M_Rqst_r<= '1' when (POPop ='1' or LOADop ='1' or RETop ='1')
@@ -59,9 +61,9 @@ architecture bhv of MemoryUnit is
 
         --Set M_Addr
         -- TODO: pad the memory addresses
-        M_Addr<= push_addr when (PUSHop='1' or INTop='1' or CALLop='1') 
-        else  ar_S when (POPop='1' or LOADop='1')
-        else  ar_T when (STDop='1' or RETop='1')
+        M_Addr<= push_addr when (PUSHop='1' or INTop='1' or CALLop='1' or POPop='1' or RETop='1' or RTIop = '1') 
+        else  ar_S when (LOADop='1')
+        else  ar_T when (STDop='1')
         else (others=>'0');
 
         --Set M_Data

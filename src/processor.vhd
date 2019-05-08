@@ -107,13 +107,13 @@ architecture Structural of Processor is
         negative_flag <= flags(1);
         carry_flag <= flags(2);
 
-        -- FIXME: MUX the MEM and Fetch stages over access to memory after the MEM stage is implemented.
-        read_mem <= mem_stage_read_mem or fetch_read_mem;
+        read_mem <= '0' when mem_stage_write_mem = '1' else mem_stage_read_mem or fetch_read_mem;
         write_mem <= mem_stage_write_mem;
         write_double_mem <= mem_stage_write_double;
         stall_fetch <= mem_stage_read_mem or mem_stage_write_mem;
         mem_address_out <= mem_stage_address when stall_fetch = '1' else fetch_addr_out; 
         mem_data_out <= mem_stage_data;
+        -- TODO: Generalize MData buffer size.
         MData_buff_wb_in <= mem_stage_data(15 downto 0) when mem_stage_write_mem = '1' else
                             mem_data_in(15 downto 0) when mem_stage_read_mem = '1' else
                             (others => '0');
