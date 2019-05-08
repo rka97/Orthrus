@@ -32,6 +32,8 @@ entity DecodeUnit is
         SETC_Op         :   out std_logic;
         CLRC_Op         :   out std_logic;
         ShiftAmt        :   out std_logic_vector(3 downto 0);
+        mem_load        :   out std_logic;
+        RTI_Op          :   out std_logic;
         push_double     :   out std_logic
     );
 end DecodeUnit;
@@ -69,19 +71,21 @@ architecture Behavioral of DecodeUnit is
         In_Op <= '1' when IR_Op = INST_IN else '0';
         LDM_Op <= '1' when IR_Op = INST_LDM else '0';
         Pop_Op <= '1' when IR_Op = INST_POP else '0';
+        RTI_Op <= '1' when IR_Op = INST_RTI else '0';
         RestoreFlags <= '1' when IR_Op = INST_RET else '0';
         push_double <= '1' when IR_Op = INST_CALL or IR_Op = INST_ITR else '0';
-
+        mem_load <= '1' when IR_Op = INST_POP or IR_Op = INST_LDD else '0';
+        
         -- Combinational process that computes RTAddr, RSAddr, WBReg, RestoreFlags, and UpdateFlags.
         comp_control : process(IR_Op, IR, IR_short)
         begin
             ShiftAmt <= (others => '0');
             if IR_Op = INST_NOT or IR_Op = INST_INC or IR_Op = INST_DEC then
                 -- ALUOp <= ALUOP_INC;
-                RSAddr <= (others => '0');
-                rs_read <= '0';
+                RSAddr <= IR_short(10 downto 8); -- (others => '0');
+                rs_read <= '1';
                 RTAddr <= IR_short(10 downto 8);
-                rt_read <= '1';
+                rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '1';
             elsif IR_Op = INST_OUT or IR_Op = INST_PUSH then
@@ -134,10 +138,10 @@ architecture Behavioral of DecodeUnit is
                 UpdateFlags <= '1';
             elsif IR_Op = INST_SHL or IR_Op = INST_SHR then
                 -- ALUOp <= ALUOP_SHL;
-                RSAddr <= (others => '0');
-                rs_read <= '0';
+                RSAddr <= IR_short(10 downto 8); --(others => '0');
+                rs_read <= '1';
                 RTAddr <= IR_short(10 downto 8);
-                rt_read <= '1';
+                rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '1';
                 ShiftAmt <= IR_short(4 downto 1);
@@ -149,6 +153,14 @@ architecture Behavioral of DecodeUnit is
                 rt_read <= '1';
                 WBReg <= '0';
                 UpdateFlags <= '0';
+            elsif IR_Op = INST_SETC or IR_Op = INST_CLRC then
+                -- ALUOp <= ALUOP_NOP
+                RTAddr <= (others => '0');
+                rt_read <= '0';
+                RSAddr <= (others => '0');
+                rs_read <= '0';
+                WBReg <= '0';
+                UpdateFlags <= '1';
             else
                 -- ALUOp <= ALUOP_NOP;
                 RTAddr <= (others => '0');

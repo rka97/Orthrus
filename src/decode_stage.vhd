@@ -16,10 +16,10 @@ entity DecodeStage is
         reset           :   in std_logic;
 
         -- control signals
-        stall           :   in std_logic;
+        -- stall           :   in std_logic;
         -- for the stack pointer
-        sp_write        :   in std_logic;
-        sp_data_in      :   in std_logic_vector(M-1 downto 0);
+        -- sp_write        :   in std_logic;
+        -- sp_data_in      :   in std_logic_vector(M-1 downto 0);
         -- for the register file / from the WB stage
         rf_write_1      :   in std_logic;
         rf_write_1_addr :   in std_logic_vector(L_BITS-1 downto 0);
@@ -58,6 +58,7 @@ entity DecodeStage is
 end DecodeStage;
 
 architecture Behavioral of DecodeStage is
+    signal not_clk : std_logic;
     -- Register File signals
     signal rs1_read, rt1_read : std_logic;
     signal rs1_addr, rt1_addr : std_logic_vector(L_BITS-1 downto 0); 
@@ -74,6 +75,7 @@ architecture Behavioral of DecodeStage is
 
     signal will_branch_1 : std_logic;
     signal will_branch_2 : std_logic;
+    signal br_data_in, br_data_out : std_logic_vector(M downto 0);
 
     -- Stack pointer management
     signal sp_load_in : std_logic;
@@ -81,10 +83,11 @@ architecture Behavioral of DecodeStage is
     signal sp_subtract : std_logic;
     signal sp_increment : integer range 0 to 2;
     signal sp_data_incremented : std_logic_vector(M-1 downto 0);
-    signal sp_data_reg : std_logic_vector(M-1 downto 0);
+    -- signal sp_data_reg : std_logic_vector(M-1 downto 0);
     begin
-        control_word_1 <= cw_data_1(31 downto 3) & "00" & cw_data_1(0);
-        control_word_2 <= cw_data_2(31 downto 3) & "00" & cw_data_2(0);
+        not_clk <= not(clk);
+        control_word_1 <= cw_data_1(31 downto 0);
+        control_word_2 <= cw_data_2(31 downto 0);
 
         rt1_addr <= cw_data_1(27 downto 25);
         rs1_addr <= cw_data_1(24 downto 22);
@@ -121,11 +124,14 @@ architecture Behavioral of DecodeStage is
                          carry_flag when IR2_Op = INST_JC else
                          '0';
         
-        branch <= will_branch_1 or will_branch_2;
-        branch_address <= rf_rt1_data when will_branch_1 = '1' else
-                          rf_rt2_data when will_branch_2 = '1' else
-                          (others => '0');
-        
+        -- TODO: Branch address padding.
+        branch <= br_data_out(0);
+        branch_address <= br_data_out(M downto 1);
+        br_data_in(0) <= will_branch_1 or will_branch_2;
+        br_data_in(M downto 1) <= rf_rt1_data when will_branch_1 = '1' else
+                                  rf_rt2_data when will_branch_2 = '1' else
+                                  (others => '0');
+
         push_addr_1 <= sp_data when IR1_Op = INST_PUSH or IR1_Op = INST_CALL or IR1_Op = INST_ITR else 
                        sp_data_incremented when IR1_Op = INST_POP or IR1_Op = INST_RET or IR1_Op = INST_RTI else 
                        (others => '0');
@@ -134,18 +140,29 @@ architecture Behavioral of DecodeStage is
                        (others => '0');
         
         -- For managing the stack pointer
-        sp_data <= sp_data_in when sp_write = '1' else sp_data_reg;
+        -- sp_data <= sp_data_in when sp_write = '1' else sp_data_reg;
         sp_data_incremented <= std_logic_vector(unsigned(sp_data) + to_unsigned(sp_increment, M)) when sp_subtract = '0' else std_logic_vector(unsigned(sp_data) - to_unsigned(sp_increment, M));
+
+        branch_reg_inst : entity orthrus.Reg
+            generic map ( n => M + 1)
+            port map (
+                clk => clk,
+                load => '1',
+                reset => reset,
+                d => br_data_in,
+                q => br_data_out,
+                rst_data => (others => '0')
+            );
 
         stack_pointer_reg_inst: entity orthrus.Reg
             generic map (n => M)
             port map (
-                clk => clk,
+                clk => not_clk,
                 load => sp_load_in,
                 reset => reset,
                 d => sp_data_incremented,
-                q => sp_data_reg,
-                rst_data => (others => '0')
+                q => sp_data,
+                rst_data => SP_RESET_ADDR
             );
         
         register_file_inst : entity orthrus.RegisterFile
@@ -204,7 +221,8 @@ architecture Behavioral of DecodeStage is
                 SETC_Op => cw_data_1(8),
                 CLRC_Op => cw_data_1(7),
                 ShiftAmt => cw_data_1(6 downto 3),
-                -- cw_data_1(2) and cw_data_1(1) are free.
+                mem_load => cw_data_1(2),
+                RTI_Op => cw_data_1(1),
                 push_double => cw_data_1(0)
             );
 
@@ -233,13 +251,14 @@ architecture Behavioral of DecodeStage is
                 SETC_Op => cw_data_2(8),
                 CLRC_Op => cw_data_2(7),
                 ShiftAmt => cw_data_2(6 downto 3),
-                -- cw_data_2(2) and cw_data_2(1) are free.
+                mem_load => cw_data_2(2),
+                RTI_Op => cw_data_2(1),
                 push_double => cw_data_2(0)
             );
 
         -- TODO: Stack Pointer management.
-        -- TODO: refactor this into two smaller blocks + a priority block?
-        comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
+        -- comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
+        comp_new_sp : process(IR2_Op, IR1_Op)
         begin
             if IR2_Op = INST_PUSH then
                 sp_increment <= 1;
@@ -273,10 +292,10 @@ architecture Behavioral of DecodeStage is
                 sp_increment <= 1;
                 sp_subtract <= '0';
                 sp_load_in <= '1';
-            elsif sp_write = '1' then
-                sp_increment <= 0;
-                sp_subtract <= '0';
-                sp_load_in <= '1';
+            -- elsif sp_write = '1' then
+            --     sp_increment <= 0;
+            --     sp_subtract <= '0';
+            --     sp_load_in <= '1';
             else
                 sp_increment <= 0;
                 sp_subtract <= '0';

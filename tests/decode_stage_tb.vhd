@@ -7,7 +7,7 @@ entity DecodeStageTB is
 end DecodeStageTB;
 
 architecture TB of DecodeStageTB is
-    signal clk, reset, stall : std_logic := '0';
+    signal clk, reset : std_logic := '0';
     signal sp_write : std_logic := '0';
     signal sp_data_in : std_logic_vector(M-1 downto 0) := (others => '0');
 
@@ -37,9 +37,9 @@ begin
         port map (
             clk => clk,
             reset => reset,
-            stall => stall,
-            sp_write => sp_write,
-            sp_data_in => sp_data_in,
+            -- stall => stall,
+            -- sp_write => sp_write,
+            -- sp_data_in => sp_data_in,
             rf_write_1 => rf_write_1,
             rf_write_1_addr => rf_write_1_addr,
             rf_data_in_1 => rf_data_in_1,
@@ -114,7 +114,6 @@ begin
         assert(control_word_2(24 downto 22) = "110") report "RS Address for STD is wrong!";
         assert(RS2 = X"FEAC") report "RS value for STD is wrong!";
         wait for period;
-        -- TODO: Test branches (must be tested in tandem with the execution).
         wait for period * 10;
     end process;
 

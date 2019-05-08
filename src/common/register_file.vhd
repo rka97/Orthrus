@@ -73,7 +73,7 @@ architecture Behavioral of RegisterFile is
                     register_inputs(i) <= data_in_1;
                 else
                     register_load(i) <= '0';
-                    register_inputs(i) <= data_in_2;
+                    register_inputs(i) <= (others => '0');
                 end if;
             end loop;
         end process;

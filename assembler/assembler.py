@@ -34,9 +34,7 @@ def assemble(file_name):
     long_immediate_commands = data["long_immediate_commands"]
     op_codes = data["op_codes"]
     register_codes = data["register_codes"]
-    memory = {
-        0: "0000000000000000"
-    }
+    memory = {}
     # print(one_op_commands)
     while itr < len(clean_lines):
         line = clean_lines[itr]
@@ -44,7 +42,7 @@ def assemble(file_name):
         # print(words)
         current_addr_str = str(current_addr)
         if words[0] == ".ORG":
-            current_addr = int(words[1])
+            current_addr = int(words[1], 16)
             logger.info("Changing address to " + str(current_addr))
         elif zero_op_commands.count(words[0]) > 0:
             memory[current_addr] = op_codes[words[0]] + "00000000000"
@@ -68,10 +66,10 @@ def assemble(file_name):
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + \
                 "000" + \
-                binary_repr(int(words[2]), width=4)
+                binary_repr(int(words[2], 16), width=4) + "0"
             logger.info("At address " + current_addr_str +
                         ": " + words[0] + " " + words[1] + " " + words[2])
-            print(len(memory[current_addr]))
+            # print(len(memory[current_addr]))
             assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif long_immediate_commands.count(words[0]) > 0:
@@ -79,12 +77,12 @@ def assemble(file_name):
             logger.info("At address " + current_addr_str + ": " + words[0] + " " + words[1])
             assert(len(memory[current_addr]) == 16)
             current_addr += 1
-            memory[current_addr] = binary_repr(int(words[2]), 16)
+            memory[current_addr] = binary_repr(int(words[2], 16), 16)
             logger.info("At address " + str(current_addr) + ": " + words[2])
             assert(len(memory[current_addr]) == 16)
             current_addr += 1
         else:
-            num = int(words[0])
+            num = int(words[0], 16)
             if (num >= 0 and num < 65536) or (num >= -32768 and num < 32768):
                 memory[current_addr] = binary_repr(num, width=16)
                 logger.info("At address " + current_addr_str + ": " + str(num))

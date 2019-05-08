@@ -1,0 +1,49 @@
+force -freeze sim:/writebackstage/clk 0 0, 1 {50 ns} -r 100
+force -freeze sim:/writebackstage/control_word_1 32'hFFFFFFFF 0
+force -freeze sim:/writebackstage/alu_res_1 16'hFFFF 0
+
+force -freeze sim:/writebackstage/control_word_2 32'hFFFFFFFF 0
+force -freeze sim:/writebackstage/alu_res_2 16'hFFFF 0
+
+
+
+force -freeze sim:/writebackstage/mem_data 16'hABAB 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00000000 0
+
+force -freeze sim:/writebackstage/control_word_2 32'h00000000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h02200000 0
+
+force -freeze sim:/writebackstage/control_word_2 32'h02200000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00100000 0
+
+force -freeze sim:/writebackstage/control_word_2 32'h00100000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00080000 0
+
+
+force -freeze sim:/writebackstage/control_word_2 32'h00080000 0
+run
+
+force -freeze sim:/writebackstage/control_word_1 32'h00040000 0
+
+force -freeze sim:/writebackstage/control_word_2 32'h00040000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00008000 0
+
+
+force -freeze sim:/writebackstage/control_word_2 32'h00008000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00004000 0
+force -freeze sim:/writebackstage/control_word_2 32'h00004000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h00001000 0
+force -freeze sim:/writebackstage/control_word_2 32'h00001000 0
+run
+force -freeze sim:/writebackstage/control_word_1 32'h06221000 0
+force -freeze sim:/writebackstage/control_word_2 32'h06221000 0
+run
+
+

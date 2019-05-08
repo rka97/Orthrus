@@ -43,11 +43,12 @@ architecture Behavioral of FetchStage is
     signal instr2_op        : std_logic_vector(4 downto 0);
     signal instr1           : std_logic_vector(N-1 downto 0);
     signal instr2           : std_logic_vector(N-1 downto 0);  
+    signal not_clk          : std_logic;
     constant NOP_FULL       : std_logic_vector(2*N-1 downto 0) := INST_NOP & (2*N-6 downto 0 => '0');
     
-    function UsesMemory(
-    instr_op : in std_logic_vector)
-    return std_logic is
+    function UsesMemory (
+        instr_op : in std_logic_vector(4 downto 0)
+    ) return std_logic is
     begin
         if (instr_op = INST_PUSH or instr_op = INST_POP or instr_op = INST_LDD or instr_op = INST_STD or instr_op = INST_RET or instr_op = INST_RTI) then
             return '1';
@@ -55,19 +56,35 @@ architecture Behavioral of FetchStage is
             return '0';
         end if;
     end UsesMemory;
+
+    function IsBranch(
+        instr_op : in std_logic_vector(4 downto 0)
+    ) return std_logic is 
+    begin
+        if (instr_op = INST_JMP or instr_op = INST_JZ or instr_op = INST_JN or instr_op = INST_JC or instr_op = INST_CALL or instr_op = INST_RET or instr_op = INST_RTI) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end IsBranch;
 begin
+    not_clk <= not(clk);
+
     PC_inst : entity orthrus.Reg
         generic map ( n => M )
         port map (
-            clk => clk, d => pc_data_in, q => pc_data_out,
-            rst_data => RESET_ADDR, load => pc_load, reset => reset
+            clk => not_clk, d => pc_data_in, q => pc_data_out,
+            rst_data => mem_data_in(M-1 downto 0), load => pc_load, reset => reset
         );
     
-    mem_address_out <= pc_data_out when reset = '0' and stall = '0' else (others => '0');
-    read_mem <= '1' when reset = '0' and stall = '0' else '0';
+    mem_address_out <= pc_data_out when reset = '0' and stall = '0' else 
+                       RESET_ADDR  when reset = '1' else (others => '0');
+    -- read_mem <= '1' when reset = '0' and stall = '0' else '0';
+    -- read_mem <= '1' when reset = '0' else '0'; -- MUX the stall outside.
+    read_mem <= '1';
 
-    instr1_op <= mem_data_in(2*N-1 downto 2*N-5);
-    instr2_op <= mem_data_in(N-1 downto N-5);
+    instr1_op <= mem_data_in(N-1 downto N-5);
+    instr2_op <= mem_data_in(2*N-1 downto 2*N-5);
 
     instr1 <= mem_data_in(N-1 downto 0); -- first instruction
     instr2 <= mem_data_in(2*N-1 downto N); -- second instruction
@@ -76,13 +93,14 @@ begin
     new_pc <= pc_data_in;
 
     -- Combinational process that computes the new IRs and memory increment given the process.
-    pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2)
+    pre_decode : process(reset, interrupt, instr1_op, instr2_op, instr1, instr2, branch)
     begin
-        if reset = '1' or stall = '1' then
+        if reset = '1' or stall = '1' or branch = '1' then
             IR1 <= NOP_FULL;
             IR2 <= NOP_FULL;
             increment <= 0;
         elsif interrupt = '1' then
+            -- TODO: make sure interrupt works.
             IR1 <= INST_ITR & (N-6 downto 0 => '0');
             IR2 <= NOP_FULL;
             increment <= 0;
@@ -95,7 +113,9 @@ begin
                 IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
-            elsif instr1_op = INST_CALL then -- If INST1 is a CALL
+            elsif IsBranch(instr1_op) = '1' or IsBranch(instr2_op) = '1' then 
+                -- If INST1 or INST2 is a branch, pass just 1.
+                -- We assume branches always take the first pipe to simplify flushing.
                 IR1 <= instr1 & (N-1 downto 0 => '0');
                 IR2 <= NOP_FULL;
                 increment <= 1;
@@ -129,7 +149,7 @@ begin
             pc_data_in <= branch_address;
         elsif wpc1_write = '1' or wpc2_write = '1' then -- Take the PC address from the memory directly.
             pc_load <= '1';
-            pc_data_in <= mem_data_in(2*N-1 downto M);
+            pc_data_in <= mem_data_in(M-1 downto 0);
         else -- Take the incremented PC normally.
             pc_load <= '1';
             pc_data_in <= incremented_pc;
