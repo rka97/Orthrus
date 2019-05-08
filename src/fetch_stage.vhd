@@ -45,7 +45,8 @@ architecture Behavioral of FetchStage is
     signal instr2           : std_logic_vector(N-1 downto 0);  
     signal not_clk          : std_logic;
     constant NOP_FULL       : std_logic_vector(2*N-1 downto 0) := INST_NOP & (2*N-6 downto 0 => '0');
-    
+    signal pc_reset : std_logic;
+
     function UsesMemory (
         instr_op : in std_logic_vector(4 downto 0)
     ) return std_logic is
@@ -69,16 +70,18 @@ architecture Behavioral of FetchStage is
     end IsBranch;
 begin
     not_clk <= not(clk);
+    pc_reset <= reset or interrupt;
 
     PC_inst : entity orthrus.Reg
         generic map ( n => M )
         port map (
             clk => not_clk, d => pc_data_in, q => pc_data_out,
-            rst_data => mem_data_in(M-1 downto 0), load => pc_load, reset => reset
+            rst_data => mem_data_in(M-1 downto 0), load => pc_load, reset => pc_reset
         );
     
-    mem_address_out <= pc_data_out when reset = '0' and stall = '0' else 
-                       RESET_ADDR  when reset = '1' else (others => '0');
+    mem_address_out <= RESET_ADDR  when reset = '1' else 
+                       INTERRUPT_ADDR when interrupt = '1' else
+                        pc_data_out when reset = '0' and stall = '0' else (others => '0');
     -- read_mem <= '1' when reset = '0' and stall = '0' else '0';
     -- read_mem <= '1' when reset = '0' else '0'; -- MUX the stall outside.
     read_mem <= '1';
@@ -99,9 +102,9 @@ begin
             IR1 <= NOP_FULL;
             IR2 <= NOP_FULL;
             increment <= 0;
-        elsif interrupt = '1' then
+        elsif interrupt = '1' and stall = '0' then
             -- TODO: make sure interrupt works.
-            IR1 <= INST_ITR & (N-6 downto 0 => '0');
+            IR1 <= INST_ITR & (N-6 downto 0 => '0') & (N-1 downto 0 => '0');
             IR2 <= NOP_FULL;
             increment <= 0;
         else
@@ -139,7 +142,7 @@ begin
 
     -- TODO: Implement TakeMem (or look into what it did?).
     -- Combinational process that computes the New PC given the old PC and some control signals.
-    comp_npc : process(incremented_pc, mem_data_in, stall, branch, branch_address, wpc1_write, wpc2_write)
+    comp_npc : process(incremented_pc, mem_data_in, stall, branch, branch_address, wpc1_write, wpc2_write, interrupt)
     begin
         if reset = '1' then
             pc_load <= '0';

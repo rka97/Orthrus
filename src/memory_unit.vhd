@@ -53,7 +53,7 @@ architecture bhv of MemoryUnit is
         RTIop <= CW(1);
 
         --Set M_Rqst
-        M_Rqst_r<= '1' when (POPop ='1' or LOADop ='1' or RETop ='1')
+        M_Rqst_r<= '1' when (POPop ='1' or LOADop ='1' or RETop ='1' or RTIop = '1')
         else '0';
 
         M_Rqst_w<= '1' when (PUSHop ='1' or  STDop ='1'or CALLop='1' or   INTop ='1' )
@@ -76,7 +76,7 @@ architecture bhv of MemoryUnit is
 
 
         --Set PC_Write
-        PC_Write<= '1' when RETop='1'
+        PC_Write<= '1' when RETop='1' or RTIop = '1'
         else '0';
 
         M_write_double <= '1' when (CALLop='1' or INTop='1') else '0';

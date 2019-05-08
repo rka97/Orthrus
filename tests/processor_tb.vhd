@@ -9,7 +9,7 @@ entity ProcessorTB is
 end ProcessorTB;
 
 architecture TB of ProcessorTB is
-    signal clk, reset, interrupt : std_logic := 'Z';
+    signal clk, reset, interrupt : std_logic := '0';
 
     signal read_mem, write_mem, write_double_mem : std_logic := '0';
     signal mem_address : std_logic_vector(15 downto 0);

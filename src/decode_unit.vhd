@@ -72,7 +72,7 @@ architecture Behavioral of DecodeUnit is
         LDM_Op <= '1' when IR_Op = INST_LDM else '0';
         Pop_Op <= '1' when IR_Op = INST_POP else '0';
         RTI_Op <= '1' when IR_Op = INST_RTI else '0';
-        RestoreFlags <= '1' when IR_Op = INST_RET else '0';
+        RestoreFlags <= '1' when IR_Op = INST_RTI else '0';
         push_double <= '1' when IR_Op = INST_CALL or IR_Op = INST_ITR else '0';
         mem_load <= '1' when IR_Op = INST_POP or IR_Op = INST_LDD else '0';
         

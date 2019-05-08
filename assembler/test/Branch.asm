@@ -19,15 +19,6 @@ NOP
 in R4     # R4=300
 NOP
 
-NOP # in R4 in Decode
-NOP
-
-NOP # ~ in EX
-NOP
-
-NOP # ~ in MA
-NOP
-
 Push R4   # sp=FFFFFFFE, M[FFFFFFFF]=300
 JMP R1 
 INC R1	  # this statement shouldn't be executed,
@@ -36,6 +27,11 @@ INC R1	  # this statement shouldn't be executed,
 .ORG 30
 AND R1,R5   # R5=0 , Z = 1
             # try interrupt here
+NOP
+
+NOP
+NOP
+
 JZ  R2      # Jump taken, Z = 0
 SETC        # this statement shouldn't be executed, C-->1
 
@@ -46,22 +42,12 @@ JC R3      # Jump Not taken
 # check destination forwarding
 NOT R5     # R5=FFFF, Z= 0, C--> not change, N=1
 in  R6     # R6=200, flag no change
-# NOP
-
-# NOP
-# NOP
-
-# NOP
-# NOP
-
-# NOP
-# NOP
 
 JN  R6     # jump taken, N = 0
 INC R1
 
 .ORG 100
-CLRC
+SETC
 AND R0,R0    # N=0,Z=1
 out R6
 rti
@@ -71,28 +57,10 @@ rti
 SETC      # C-->1
 POP R6     # R6=300, SP=FFFFFFFF
 
-# NOP
-# NOP
-
-# NOP
-# NOP
 
 Call R6    # SP=FFFFFFFD, M[FFFFFFFF]=half next PC,M[FFFFFFFE]=other half next PC
           # try interrup here
 INC R6	  # R6=401, this statement shouldn't be executed till call returns, C--> 0, N-->0,Z-->0
-NOP
-
-NOP
-NOP
-
-NOP
-NOP
-
-NOP
-NOP
-
-NOP
-NOP
 
 .ORG 300
 Add R3,R6 # R6=401
