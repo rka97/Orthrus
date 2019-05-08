@@ -88,11 +88,40 @@ architecture Structural of Processor is
     signal rf_write_1_addr, rf_write_2_addr : std_logic_vector(2 downto 0) := (others => '0');
     signal rf_data_in_1, rf_data_in_2 : std_logic_vector(N-1 downto 0) := (others => '0');
 
+
+
+    ------------- raw hazzard signals
+    signal load_forwarded_rs1 : std_logic; --To decide what data will be used, standard or forwared
+    signal load_forwarded_rs2 :   std_logic;
+    signal load_forwarded_rt1 :   std_logic;
+    signal load_forwarded_rt2 :   std_logic;
+    signal load_forwarded_mdata1 :   std_logic;
+    signal load_forwarded_mdata2 :   std_logic;
+    signal mem_store1 :std_logic;
+    signal mem_store2 :std_logic;
+    signal ex_rs1_for:   std_logic_vector(N-1 downto 0); --actual data forwarded
+    signal ex_rt1_for:   std_logic_vector(N-1 downto 0);
+    signal ex_rs2_for:   std_logic_vector(N-1 downto 0);
+    signal ex_rt2_for:   std_logic_vector(N-1 downto 0);
+    signal mem_data1_for:   std_logic_vector(2*N-1 downto 0);
+    signal mem_data2_for:  std_logic_vector(2*N-1 downto 0);
+    signal stall_DandE :std_logic;
+
+    signal input_mem_cw_z: std_logic;
+    signal mem_cw_1_in: std_logic_vector(2*N-1 downto 0);
+    signal mem_cw_2_in: std_logic_vector(2*N-1 downto 0);
+    signal ex_rs1_input: std_logic_vector(N-1 downto 0);
+    signal ex_rt1_input: std_logic_vector(N-1 downto 0);
+    signal ex_rs2_input: std_logic_vector(N-1 downto 0);
+    signal ex_rt2_input: std_logic_vector(N-1 downto 0);
+    signal wb_mdata: std_logic_vector(2*N-1 downto 0);
+
+
     begin
         not_clk <= not(clk);
 
-        stall_decode <= '0';
-        stall_execute <= '0';
+        stall_decode <= '1' when stall_DandE='1' else '0';
+        stall_execute <= '1' when stall_DandE='1' else '0';
         stall_mem <= '0';
         stall_wb <= '0';
 
@@ -115,7 +144,10 @@ architecture Structural of Processor is
         write_double_mem <= mem_stage_write_double;
         stall_fetch <= mem_stage_read_mem or mem_stage_write_mem;
         mem_address_out <= mem_stage_address when stall_fetch = '1' else fetch_addr_out; 
-        mem_data_out <= mem_stage_data;
+        
+        mem_data_out <= mem_data1_for when load_forwarded_mdata1='1' else
+                        mem_data2_for when load_forwarded_mdata2='1' else
+                        mem_stage_data;
         -- TODO: Generalize MData buffer size.
         MData_buff_wb_in <= mem_stage_data(15 downto 0) when mem_stage_write_mem = '1' else
                             mem_data_in(15 downto 0) when mem_stage_read_mem = '1' else
@@ -199,6 +231,18 @@ architecture Structural of Processor is
                 push_addr_2 => push_addr_2_dec
             );
         -- Execute Stage buffers
+        ex_rs1_input<=  ex_rs1_for when load_forwarded_rs1='1' else
+                        RS1_buff_ex;
+
+        ex_rt1_input<=  ex_rt1_for when load_forwarded_rt1='1' else
+                         RT1_buff_ex;
+
+        ex_rs2_input<=  ex_rs2_for when load_forwarded_rs2='1' else
+                        RS2_buff_ex;
+
+        ex_rt2_input<=  ex_rt2_for when load_forwarded_rt2='1' else
+                        RT2_buff_ex;
+
         control_word_1_inst : entity orthrus.Reg
             generic map ( n => 2*N )
             port map (
@@ -266,24 +310,29 @@ architecture Structural of Processor is
                 clk => clk,
                 reset => reset,
                 
-                Cw_1 => cw_1_buff_ex,
-                A1 => RS1_buff_ex,
-                B1 => RT1_buff_ex,
+                ControlW_1 => cw_1_buff_ex,
+                A1 => ex_rs1_input,
+                B1 => ex_rt1_input,
                 F1 => A1Res,
 
-                Cw_2 => cw_2_buff_ex,
-                A2 => RS2_buff_ex,
-                B2 => RT2_buff_ex,
+                ControlW_2 => cw_2_buff_ex,
+                A2 => ex_rs2_input,
+                B2 => ex_rt2_input,
                 F2 => A2Res,
 
                 reset_flags => reset_flags_buff_ex,
-                Flags => flags
+                Flags => flags,
+                cw_z=>'0'
             );
         -- Memory Stage buffers
+        mem_cw_1_in<= (others=>'0') when input_mem_cw_z='1' else
+                        cw_1_buff_ex;
+        mem_cw_2_in<= (others=>'0') when input_mem_cw_z='1' else
+        cw_2_buff_ex;
         mem_cw_1_inst : entity orthrus.Reg
             generic map ( n => 2*N )
             port map (
-                clk => not_clk, d => cw_1_buff_ex, q => cw_1_buff_mem,
+                clk => not_clk, d => mem_cw_1_in, q => cw_1_buff_mem,
                 rst_data => (others => '0'), load => load_mem_buf, reset => reset_mem_buffer 
             );
         mem_A1Res_inst : entity orthrus.Reg
@@ -307,7 +356,7 @@ architecture Structural of Processor is
         mem_cw_2_inst : entity orthrus.Reg
             generic map ( n => 2*N )
             port map (
-                clk => not_clk, d => cw_2_buff_ex, q => cw_2_buff_mem,
+                clk => not_clk, d => mem_cw_2_in, q => cw_2_buff_mem,
                 rst_data => (others => '0'), load => load_mem_buf, reset => reset_mem_buffer 
             );
         mem_A2Res_inst : entity orthrus.Reg
@@ -335,15 +384,16 @@ architecture Structural of Processor is
                 rst_data => (others => '0'), load => load_mem_buf, reset => reset_mem_buffer 
             );
         -- Memory Stage instantiations
+
         MemoryStage_inst : entity orthrus.MemoryStage
             generic map ( N => N, M => M, buffer_unit => 2*N)
             port map (
-                CW1 => cw_1_buff_mem,
+                ControlW1 => cw_1_buff_mem,
                 ar_S1 => A1Res_buff_mem,
                 ar_T1 => RT1_buff_mem,
                 push_addr_1 => push_addr_1_buff_mem,
 
-                CW2 => cw_2_buff_mem,
+                ControlW2 => cw_2_buff_mem,
                 ar_S2 => A2Res_buff_mem,
                 ar_T2 => RT2_buff_mem,
                 push_addr_2 => push_addr_2_buff_mem,
@@ -356,7 +406,8 @@ architecture Structural of Processor is
                 M_Data => mem_stage_data,
                 M_Rqst_r => mem_stage_read_mem,
                 M_Rqst_w => mem_stage_write_mem,
-                M_write_double => mem_stage_write_double
+                M_write_double => mem_stage_write_double,
+                cw_z=>'0'
             );
         -- WB Stage buffers
         wb_cw_1_inst : entity orthrus.Reg
@@ -412,6 +463,59 @@ architecture Structural of Processor is
                 to_rf_write_data_2 => rf_data_in_2,
                 to_rf_write_2 => rf_write_2,
                 to_rf_write_sel_2 => rf_write_2_addr
+            );
+
+            --------------------------
+            mem_store1<='1' when cw_1_buff_mem(16)='1' or cw_1_buff_mem(19)='1'
+            else '0';
+            mem_store2<='1' when cw_2_buff_mem(16)='1' or cw_2_buff_mem(19)='1'
+            else '0';
+            MData_buff_wb_out<=wb_mdata(N-1 downto 0);
+
+            raw_haz_unit: entity orthrus.RAWHazardUnit
+            generic map ( N => N, M => M, L_BITS=>3, buffer_unit=>2*N )
+            port map(
+                ex_rs_code1 => cw_1_buff_ex(24 downto 22),
+                ex_rt_code1 => cw_1_buff_ex(27 downto 25),
+                ex_WBreg1=>  cw_1_buff_ex(21),
+                ex_out1=> A1Res,
+                ex_rs_code2 => cw_2_buff_ex(24 downto 22),
+                ex_rt_code2 => cw_2_buff_ex(27 downto 25),
+                ex_WBreg2=> cw_2_buff_ex(21),
+                ex_out2=> A2Res,
+                mem_WBreg1 =>cw_1_buff_mem(21),
+                mem_rt_code1 =>cw_1_buff_mem(27 downto 25),
+                mem_op_r1  => cw_1_buff_mem(2),
+                mem_AR1     => A1Res_buff_mem,
+                mem_op_w1 => mem_store1,
+                mem_WBreg2 => cw_2_buff_mem(21),
+                mem_rt_code2=>cw_2_buff_mem(27 downto 25),
+                mem_op_r2  =>cw_2_buff_mem(2),
+                mem_AR2   => A2Res_buff_mem,
+                mem_op_w2 => mem_store2,
+                wb_mdata  => wb_mdata,
+                wb_WBreg1   =>  cw_1_buff_wb(21),
+                wb_rt_code1=>cw_1_buff_wb(27 downto 25),
+                wb_AR1    => A1Res_buff_wb,
+                wb_mem_op1=> cw_1_buff_wb(2),
+                wb_WBreg2  => cw_2_buff_wb(21),
+                wb_rt_code2=>cw_2_buff_wb(27 downto 25),
+                wb_AR2    => A2Res_buff_wb,
+                wb_mem_op2=>cw_2_buff_wb(2),
+                stall_DandE => stall_DandE,
+                input_mem_cw_z =>input_mem_cw_z,
+                load_forwarded_rs1=> load_forwarded_rs1,
+                load_forwarded_rs2=> load_forwarded_rs2,
+                load_forwarded_rt1=>load_forwarded_rt1,
+                load_forwarded_rt2=> load_forwarded_rt2,
+                load_forwarded_mdata1=> load_forwarded_mdata1,
+                load_forwarded_mdata2=>load_forwarded_mdata2,
+                ex_rs1=>ex_rs1_for,
+                ex_rt1=>ex_rt1_for,
+                ex_rs2=>ex_rs2_for,
+                ex_rt2=>ex_rt2_for,
+                mem_data1=>mem_data1_for,
+                mem_data2=>mem_data2_for
             );
 
         
