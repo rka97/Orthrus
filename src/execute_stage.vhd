@@ -21,6 +21,8 @@ entity ExecuteStage is
 
         clk         : in std_logic;
         reset       : in std_logic;
+
+        reset_flags : in std_logic_vector(2 downto 0);
         Flags       : out std_logic_vector(N-1 downto 0);
 
         cw_z        : in std_logic
@@ -74,14 +76,16 @@ architecture structure of ExecuteStage is
                 Negative => neg1_out --flag1(1)
             );
 
-        flag1(0) <= flag_out(0) when (Cw_1(8) = '1' or Cw_1(7) = '1') else
+        flag1(0) <= '0' when reset_flags(0) = '1' else
+                    flag_out(0) when (Cw_1(8) = '1' or Cw_1(7) = '1' or Cw_1(9) = '0') else
                     zero1_out;
 
-        flag1(1) <= flag_out(1) when (Cw_1(8) = '1' or Cw_1(7) = '1') else
+        flag1(1) <= '0' when reset_flags(1) = '1' else
+                    flag_out(1) when (Cw_1(8) = '1' or Cw_1(7) = '1' or Cw_1(9) = '0') else
                     neg1_out;
 
         flag1(2) <= '1' when Cw_1(8) = '1' else
-                    '0' when Cw_1(7) = '1' else
+                    '0' when Cw_1(7) = '1' or reset_flags(2) = '1' else
                     Carryout1 when ChangesCarry(Cw_1(31 downto 28)) = '1' else
                     flag_out(2);
 
@@ -99,14 +103,16 @@ architecture structure of ExecuteStage is
                 Negative => neg2_out --flag2(1)
             );
 
-        flag2(0) <= flag_out(0) when (Cw_2(8) = '1' or Cw_2(7) = '1') else
-            zero2_out;
+        flag2(0) <= '0' when reset_flags(0) = '1' else
+                    flag_out(0) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
+                    zero2_out;
 
-        flag2(1) <= flag_out(1) when (Cw_2(8) = '1' or Cw_2(7) = '1') else
-            neg2_out;
+        flag2(1) <= '0' when reset_flags(1) = '1' else
+                    flag_out(1) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
+                    neg2_out;
 
         flag2(2) <= '1' when Cw_2(8) = '1' else
-                    '0' when Cw_2(7) = '1' else
+                    '0' when Cw_2(7) = '1' or reset_flags(2) = '1' else
                     Carryout2 when ChangesCarry(Cw_2(31 downto 28)) = '1' else
                     flag_out(2);
 
@@ -117,11 +123,11 @@ architecture structure of ExecuteStage is
                 rst_data => (others=>'0'), load => flag_load, reset => reset
             );
 
-        flag_load <= Cw_1(9) or Cw_2(9);
-        flag_in(2 downto 0) <=  ret_flag_out when Cw_2(13) = '1' else
+        flag_load <= Cw_1(9) or Cw_2(9) or reset_flags(0) or reset_flags(1) or reset_flags(2);
+        flag_in(2 downto 0) <=  ret_flag_out(2 downto 0) when Cw_2(13) = '1' else
                                 flag2 when Cw_2(9) = '1' else
-                                ret_flag_out when Cw_1(13) = '1' else
-                                flag1 when Cw_1(9) = '1';
+                                ret_flag_out(2 downto 0) when Cw_1(13) = '1' else
+                                flag1 when Cw_1(9) = '1' or reset_flags(0) = '1' or reset_flags(1) = '1' or reset_flags(2) = '1';
         
 
         Flags <= flag_in;

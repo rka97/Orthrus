@@ -141,15 +141,18 @@ begin
     -- Combinational process that computes the New PC given the old PC and some control signals.
     comp_npc : process(incremented_pc, mem_data_in, stall, branch, branch_address, wpc1_write, wpc2_write)
     begin
-        if stall = '1' or reset ='1' then -- On a stall or reset, do nothing.
+        if reset = '1' then
+            pc_load <= '0';
+            pc_data_in <= (others => '0');
+        elsif wpc1_write = '1' or wpc2_write = '1' then -- Take the PC address from the memory directly.
+            pc_load <= '1';
+            pc_data_in <= mem_data_in(M-1 downto 0);
+        elsif stall = '1' then -- On a stall or reset, do nothing.
             pc_load <= '0';
             pc_data_in <= (others => '0');
         elsif branch = '1' then -- Alter the PC to the branch address.
             pc_load <= '1';
             pc_data_in <= branch_address;
-        elsif wpc1_write = '1' or wpc2_write = '1' then -- Take the PC address from the memory directly.
-            pc_load <= '1';
-            pc_data_in <= mem_data_in(M-1 downto 0);
         else -- Take the incremented PC normally.
             pc_load <= '1';
             pc_data_in <= incremented_pc;

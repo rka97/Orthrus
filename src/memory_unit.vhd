@@ -71,7 +71,7 @@ architecture bhv of MemoryUnit is
         --Set M_Data
         M_Data<= (buffer_unit-1 downto N =>'0') & ar_T when PUSHop='1' 
         else    (buffer_unit-1 downto N =>'0') & ar_S when STDop='1'
-        else    new_PC when (CALLop='1' or INTop='1')
+        else    (buffer_unit-1 downto M => '0') & new_PC when (CALLop='1' or INTop='1')
         else (others=>'0');
 
 
