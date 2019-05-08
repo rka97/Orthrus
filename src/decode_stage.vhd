@@ -160,7 +160,7 @@ architecture Behavioral of DecodeStage is
                 reset => reset,
                 d => sp_data_incremented,
                 q => sp_data_reg,
-                rst_data => (others => '0')
+                rst_data => SP_RESET_ADDR
             );
         
         register_file_inst : entity orthrus.RegisterFile
