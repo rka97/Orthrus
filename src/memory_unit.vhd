@@ -64,6 +64,8 @@ architecture bhv of MemoryUnit is
         else  ar_S when (POPop='1' or LOADop='1'or LDMop='1')
         else  ar_T when (STDop='1' or RETop='1')
         else (others=>'0');
+        ----- FIX FOR ADDRESS TO PUSH/POP
+
 
         --Set M_Data
         M_Data<= (buffer_unit-1 downto N =>'0') & ar_T when PUSHop='1' 

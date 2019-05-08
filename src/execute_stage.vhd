@@ -53,7 +53,7 @@ architecture structure of ExecuteStage is
                 A => A1,
                 B => B1,
                 Cin => Cin1,
-                Imm => Imm1,
+                 Imm => Imm1,
                 F => F1,
                 Cout => Carryout1,
                 Zero => flag1(0),
