@@ -42,6 +42,10 @@ entity DecodeStage is
         -- output control signals
         branch          :   out std_logic;
         branch_address  :   out std_logic_vector(M-1 downto 0);
+        reset_flags     :   out std_logic_vector(2 downto 0);
+        -- reset_zero_flag :   out std_logic;
+        -- reset_carry_flag :   out std_logic;
+        -- reset_negative_flag  :   out std_logic;
 
         control_word_1  :   out std_logic_vector(2*N-1 downto 0);
         RT1             :   out std_logic_vector(N-1 downto 0);
@@ -74,7 +78,9 @@ architecture Behavioral of DecodeStage is
     signal In_Op_1, In_Op_2, LDM_Op_1, LDM_Op_2 : std_logic;
 
     signal will_branch_1 : std_logic;
+    -- signal reset_flags_1 : std_logic_vector(2 downto 0);
     signal will_branch_2 : std_logic;
+    -- signal reset_flags_2 : std_logic_vector(2 downto 0);
     signal br_data_in, br_data_out : std_logic_vector(M downto 0);
 
     -- Stack pointer management
@@ -131,7 +137,11 @@ architecture Behavioral of DecodeStage is
         br_data_in(M downto 1) <= rf_rt1_data when will_branch_1 = '1' else
                                   rf_rt2_data when will_branch_2 = '1' else
                                   (others => '0');
-
+        -- TODO: generalize this to both pipes branching (for now we assume branches always occur on the 1st pipe).
+        reset_flags(0) <= zero_flag when IR1_Op = INST_JZ else '0';
+        reset_flags(1) <= negative_flag when IR1_Op = INST_JN else '0';
+        reset_flags(2) <= carry_flag when IR1_Op = INST_JC else '0';
+        
         push_addr_1 <= sp_data when IR1_Op = INST_PUSH or IR1_Op = INST_CALL or IR1_Op = INST_ITR else 
                        sp_data_incremented when IR1_Op = INST_POP or IR1_Op = INST_RET or IR1_Op = INST_RTI else 
                        (others => '0');
