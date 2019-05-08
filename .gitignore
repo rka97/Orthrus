@@ -294,5 +294,8 @@ transcript*
 sc_dpiheader.h
 vsim.dbg
 
+
+/orthrus
+
 # End of https://www.gitignore.io/api/latex,modelsim
 *.mpf
