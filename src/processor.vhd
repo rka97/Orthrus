@@ -128,16 +128,27 @@ architecture Structural of Processor is
 
     signal stall_fetch_2 : std_logic;
 
-    -- function IsMemOp (
-    --     cw : in std_logic_vector(31 downto 0)
-    -- ) return std_logic is
-    -- begin
-    --     if (cw(19) = '1' or cw(18) = '1' or cw(17) = '1' or cw(16) = '1' or cw(14) = '1' or cw(1) = '1') then
-    --         return '1';
-    --     else
-    --         return '0';
-    --     end if;
-    -- end IsMemOp;
+    function AltersRS (
+        cw : in std_logic_vector(31 downto 0)
+    ) return std_logic is
+    begin
+        if (cw(11) = '1' or cw(18) = '1' or cw(10) = '1') then
+            return '0';
+        else
+            return '1';
+        end if;
+    end AltersRS;
+
+    function AltersRT (
+        cw : in std_logic_vector(31 downto 0)
+    ) return std_logic is
+    begin
+        if (cw(20) = '1' or cw(19) = '1' or cw(16) = '1' or cw(31 downto 28) = ALUOP_SUB or cw(31 downto 28) = ALUOP_ADD or cw(31 downto 28) = ALUOP_AND or cw(31 downto 28) = ALUOP_OR) then
+            return '1';
+        else
+            return '0';
+        end if;
+    end AltersRT;
     begin
         not_clk <= not(clk);
         IR1_Op <= IR1_buffered(31 downto 27);
@@ -264,16 +275,16 @@ architecture Structural of Processor is
                 push_addr_2 => push_addr_2_dec
             );
         -- Execute Stage buffers
-        ex_rs1_input<=  ex_rs1_for when load_forwarded_rs1='1' else
+        ex_rs1_input<=  ex_rs1_for when load_forwarded_rs1='1' and AltersRS(cw_1_buff_ex) = '1' else
                         RS1_buff_ex;
 
-        ex_rt1_input<=  ex_rt1_for when load_forwarded_rt1='1' else
+        ex_rt1_input<=  ex_rt1_for when load_forwarded_rt1='1' and AltersRT(cw_1_buff_ex) = '1' else
                          RT1_buff_ex;
 
-        ex_rs2_input<=  ex_rs2_for when load_forwarded_rs2='1' else
+        ex_rs2_input<=  ex_rs2_for when load_forwarded_rs2='1' and AltersRS(cw_2_buff_ex) = '1' else
                         RS2_buff_ex;
 
-        ex_rt2_input<=  ex_rt2_for when load_forwarded_rt2='1' else
+        ex_rt2_input<=  ex_rt2_for when load_forwarded_rt2='1' and AltersRT(cw_2_buff_ex) = '1' else
                         RT2_buff_ex;
 
         control_word_1_inst : entity orthrus.Reg
@@ -356,7 +367,7 @@ architecture Structural of Processor is
                 reset_flags => reset_flags_buff_ex,
                 Flags => flags,
 
-                cw_z => ctrl_hazard_stall_execute
+                cw_z => '0'
             );
         -- Memory Stage buffers
         mem_cw_1_in<= (others=>'0') when input_mem_cw_z='1' else
@@ -432,7 +443,7 @@ architecture Structural of Processor is
                 ar_T2 => RT2_buff_mem,
                 push_addr_2 => push_addr_2_buff_mem,
 
-                cw_z => ctrl_hazard_stall_mem,
+                cw_z => '0', -- FIXME: integrate this.
 
                 new_PC => new_pc_buff_mem,
 
@@ -442,8 +453,7 @@ architecture Structural of Processor is
                 M_Data => mem_stage_data,
                 M_Rqst_r => mem_stage_read_mem,
                 M_Rqst_w => mem_stage_write_mem,
-                M_write_double => mem_stage_write_double,
-                cw_z=>'0'
+                M_write_double => mem_stage_write_double
             );
         -- WB Stage buffers
         wb_cw_1_inst : entity orthrus.Reg
@@ -501,14 +511,14 @@ architecture Structural of Processor is
                 to_rf_write_sel_2 => rf_write_2_addr
             );
 
-            --------------------------
-            mem_store1<='1' when cw_1_buff_mem(16)='1' or cw_1_buff_mem(19)='1'
-            else '0';
-            mem_store2<='1' when cw_2_buff_mem(16)='1' or cw_2_buff_mem(19)='1'
-            else '0';
-            MData_buff_wb_out<=wb_mdata(N-1 downto 0);
+        --------------------------
+        mem_store1<='1' when cw_1_buff_mem(16)='1' or cw_1_buff_mem(19)='1'
+        else '0';
+        mem_store2<='1' when cw_2_buff_mem(16)='1' or cw_2_buff_mem(19)='1'
+        else '0';
+        wb_mdata <= (2*N-1 downto N => '0') & MData_buff_wb_out;
 
-            raw_haz_unit: entity orthrus.RAWHazardUnit
+        raw_haz_unit: entity orthrus.RAWHazardUnit
             generic map ( N => N, M => M, L_BITS=>3, buffer_unit=>2*N )
             port map(
                 ex_rs_code1 => cw_1_buff_ex(24 downto 22),

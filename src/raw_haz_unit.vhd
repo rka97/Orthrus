@@ -17,6 +17,7 @@ entity RAWHazardUnit is
         port (
         --- In from EX
         -- pipe 1
+        
         ex_rs_code1 : in std_logic_vector(L_BITS-1 downto 0);
         ex_rt_code1 : in std_logic_vector(L_BITS-1 downto 0);
         ex_WBreg1: in std_logic; --signal in cw1 for wb
@@ -109,20 +110,20 @@ architecture struct of RAWHazardUnit is
             load_forwarded_mdata1<='0';
         end if;
     end process;
-     --pipe 2
-     mem_wb_hz_2: process(mem_op_w2,mem_rt_code2,wb_rt_code2,wb_rt_code1,wb_AR1,wb_AR2,wb_WBreg2,wb_WBreg1)
-     begin
-         if mem_op_w2='1' and mem_rt_code2=wb_rt_code1 and wb_WBreg1='1' then
-             load_forwarded_mdata2<='1';
-             mem_data2<= (buffer_unit-1 downto N=>'0')&wb_AR1(N-1 downto 0);
-         elsif mem_op_w2='1' and mem_rt_code2=wb_rt_code2 and wb_WBreg2='1' then
-             load_forwarded_mdata2<='1';
-             mem_data2<= (buffer_unit-1 downto N=>'0')&wb_AR2(N-1 downto 0);
-         else
-             mem_data2 <=(others=>'0');
-             load_forwarded_mdata2<='0';
-         end if;
-     end process;
+    --pipe 2
+    mem_wb_hz_2: process(mem_op_w2,mem_rt_code2,wb_rt_code2,wb_rt_code1,wb_AR1,wb_AR2,wb_WBreg2,wb_WBreg1)
+    begin
+    if mem_op_w2='1' and mem_rt_code2=wb_rt_code1 and wb_WBreg1='1' then
+        load_forwarded_mdata2<='1';
+        mem_data2<= (buffer_unit-1 downto N=>'0')&wb_AR1(N-1 downto 0);
+    elsif mem_op_w2='1' and mem_rt_code2=wb_rt_code2 and wb_WBreg2='1' then
+        load_forwarded_mdata2<='1';
+        mem_data2<= (buffer_unit-1 downto N=>'0')&wb_AR2(N-1 downto 0);
+    else
+        mem_data2 <=(others=>'0');
+        load_forwarded_mdata2<='0';
+    end if;
+    end process;
 
 
     ----- EX RAW hazzards

@@ -73,63 +73,168 @@ begin
     mem_AR_mypipe,wb_AR_otherpipe,
     wb_AR_mypipe, wb_mdata,wb_WBreg_mypipe)
     begin
-        if ex_r_code = ex_rt_code_otherpipe and ex_WBreg_otherpipe='1' and i_am_pipe='1' then 
-            ex_r <= ex_out_otherpipe;
-            load_forwarded <= '1';
-            --no stalling
-            input_mem_cw_z<='0';
-            stall_DandE<='0'; 
-        --If there exists a dependency between execution stage and mem + mem operation 
-        elsif ex_r_code=mem_rt_code_otherpipe  and mem_WBreg_otherpipe='1' and mem_op_r_otherpipe='1' then 
-            input_mem_cw_z<='1';                            --input zeroes                                             
-            load_forwarded <= '0';                          --no data forwarded yet
-            stall_DandE<='1';                                   --stall!
-        --if there exists a dependency between ex and mem 
-        elsif ex_r_code=mem_rt_code_otherpipe and mem_WBreg_otherpipe = '1'   then
-            ex_r <= mem_AR_otherpipe(N-1 downto 0);                                       
-            load_forwarded <= '1';   
-            --no stalling                                                   
-            input_mem_cw_z<='0';
-            stall_DandE<='0';
-        --Same as above but my pipe
-        elsif ex_r_code=mem_rt_code_mypipe and mem_WBreg_mypipe = '1' and mem_op_r_mypipe='1' then 
-            input_mem_cw_z<='1';
-            load_forwarded <= '0';
-            stall_DandE<='1';
-        elsif ex_r_code=mem_rt_code_mypipe and mem_WBreg_mypipe ='1' then
-            ex_r <= mem_AR_mypipe(N-1 downto 0);
-            load_forwarded <= '1';
-            --no stalling
-            input_mem_cw_z<='0';
-            stall_DandE<='0';
-        --if there exists a depenedency between ex and wb 
-        elsif ex_r_code=wb_rt_code_otherpipe and wb_WBreg_otherpipe = '1'then
-            -- if it was a memory operation restult, read from Mdata
-            if wb_mem_op_otherpipe = '1' then
-                ex_r <= wb_mdata(N-1 downto 0);
-            else --read from Alu res reg
-                ex_r <= wb_AR_otherpipe(N-1 downto 0); 
-            end if;
-            load_forwarded <= '1';
-            --not stalling
-            input_mem_cw_z<='0';
-            stall_DandE<='0';
-        --Same but for mypipe
-        elsif ex_r_code=wb_rt_code_mypipe and wb_WBreg_mypipe = '1'then
-                if wb_mem_op_mypipe = '1' then
-                    ex_r <= wb_mdata(N-1 downto 0);
-                else --read from Alu res reg
-                    ex_r <= wb_AR_mypipe(N-1 downto 0); 
+        if i_am_pipe = '1' then
+            if ex_r_code = ex_rt_code_otherpipe and ex_WBreg_otherpipe = '1' then    
+                ex_r <= ex_out_otherpipe;
+                load_forwarded <= '1';
+                input_mem_cw_z <= '0';
+                stall_DandE <= '0';
+            elsif ex_r_code = mem_rt_code_mypipe and mem_WBreg_mypipe = '1' then
+                if mem_op_r_mypipe = '1' then
+                    input_mem_cw_z <= '1';
+                    load_forwarded <= '0';
+                    stall_DandE <= '1';
+                else
+                    ex_r <= mem_AR_mypipe(N-1 downto 0);
+                    load_forwarded <= '1';
+                    input_mem_cw_z <= '0';
+                    stall_DandE <= '0';
                 end if;
+            elsif ex_r_code = mem_rt_code_otherpipe and mem_WBreg_otherpipe = '1' then
+                if mem_op_r_otherpipe = '1' then
+                    input_mem_cw_z <= '1';
+                    load_forwarded <= '0';
+                    stall_DandE <= '1';
+                else
+                    ex_r <= mem_AR_otherpipe(N-1 downto 0);
+                    load_forwarded <= '1';
+                    input_mem_cw_z <= '0';
+                    stall_DandE <= '0';
+                end if;
+            elsif ex_r_code = wb_rt_code_mypipe and wb_WBreg_mypipe = '1' then
                 load_forwarded <= '1';
                 --not stalling
                 input_mem_cw_z<='0';
                 stall_DandE<='0';
-        else
-            load_forwarded <= '0';
-            input_mem_cw_z<='0';
-            stall_DandE<='0';
-        end if; 
+                if wb_mem_op_mypipe = '1' then
+                    ex_r <= wb_mdata(N-1 downto 0);
+                else
+                    ex_r <= wb_AR_mypipe(N-1 downto 0);
+                end if;
+            elsif ex_r_code = wb_rt_code_otherpipe and wb_WBreg_otherpipe = '1' then
+                load_forwarded <= '1';
+                --not stalling
+                input_mem_cw_z<='0';
+                stall_DandE<='0';
+                if wb_mem_op_otherpipe = '1' then
+                    ex_r <= wb_mdata(N-1 downto 0);
+                else
+                    ex_r <= wb_AR_otherpipe(N-1 downto 0);
+                end if;
+            else
+                ex_r <= (others => '0');
+                load_forwarded <= '0';
+                input_mem_cw_z<='0';
+                stall_DandE<='0';
+            end if;
+        else 
+            if ex_r_code = mem_rt_code_otherpipe and mem_WBreg_otherpipe = '1' then
+                if mem_op_r_otherpipe = '1' then
+                    input_mem_cw_z <= '1';
+                    load_forwarded <= '0';
+                    stall_DandE <= '1';
+                else
+                    ex_r <= mem_AR_otherpipe(N-1 downto 0);
+                    load_forwarded <= '1';
+                    input_mem_cw_z <= '0';
+                    stall_DandE <= '0';
+                end if;
+            elsif ex_r_code = mem_rt_code_mypipe and mem_WBreg_mypipe = '1' then
+                if mem_op_r_mypipe = '1' then
+                    input_mem_cw_z <= '1';
+                    load_forwarded <= '0';
+                    stall_DandE <= '1';
+                else
+                    ex_r <= mem_AR_mypipe(N-1 downto 0);
+                    load_forwarded <= '1';
+                    input_mem_cw_z <= '0';
+                    stall_DandE <= '0';
+                end if;
+            elsif ex_r_code = wb_rt_code_otherpipe and wb_WBreg_otherpipe = '1' then
+                load_forwarded <= '1';
+                --not stalling
+                input_mem_cw_z<='0';
+                stall_DandE<='0';
+                if wb_mem_op_otherpipe = '1' then
+                    ex_r <= wb_mdata(N-1 downto 0);
+                else
+                    ex_r <= wb_AR_otherpipe(N-1 downto 0);
+                end if;
+            elsif ex_r_code = wb_rt_code_mypipe and wb_WBreg_mypipe = '1' then
+                load_forwarded <= '1';
+                --not stalling
+                input_mem_cw_z<='0';
+                stall_DandE<='0';
+                if wb_mem_op_mypipe = '1' then
+                    ex_r <= wb_mdata(N-1 downto 0);
+                else
+                    ex_r <= wb_AR_mypipe(N-1 downto 0);
+                end if;
+            else
+                ex_r <= (others => '0');
+                load_forwarded <= '0';
+                input_mem_cw_z<='0';
+                stall_DandE<='0';
+            end if;
+        end if;
+
+        -- if ex_r_code = ex_rt_code_otherpipe and ex_WBreg_otherpipe='1' and i_am_pipe='1' then 
+        --     ex_r <= ex_out_otherpipe;
+        --     load_forwarded <= '1';
+        --     --no stalling
+        --     input_mem_cw_z<='0';
+        --     stall_DandE<='0'; 
+        -- --If there exists a dependency between execution stage and mem + mem operation 
+        -- elsif ex_r_code=mem_rt_code_otherpipe  and mem_WBreg_otherpipe='1' and mem_op_r_otherpipe='1' then 
+        --     input_mem_cw_z<='1';                            --input zeroes                                             
+        --     load_forwarded <= '0';                          --no data forwarded yet
+        --     stall_DandE<='1';                                   --stall!
+        -- --if there exists a dependency between ex and mem 
+        -- elsif ex_r_code=mem_rt_code_otherpipe and mem_WBreg_otherpipe = '1'   then
+        --     ex_r <= mem_AR_otherpipe(N-1 downto 0);
+        --     load_forwarded <= '1';   
+        --     --no stalling                                                   
+        --     input_mem_cw_z<='0';
+        --     stall_DandE<='0';
+        -- --Same as above but my pipe
+        -- elsif ex_r_code=mem_rt_code_mypipe and mem_WBreg_mypipe = '1' and mem_op_r_mypipe='1' then 
+        --     input_mem_cw_z<='1';
+        --     load_forwarded <= '0';
+        --     stall_DandE<='1';
+        -- elsif ex_r_code=mem_rt_code_mypipe and mem_WBreg_mypipe ='1' then
+        --     ex_r <= mem_AR_mypipe(N-1 downto 0);
+        --     load_forwarded <= '1';
+        --     --no stalling
+        --     input_mem_cw_z<='0';
+        --     stall_DandE<='0';
+        -- --if there exists a depenedency between ex and wb 
+        -- elsif ex_r_code=wb_rt_code_otherpipe and wb_WBreg_otherpipe = '1'then
+        --     -- if it was a memory operation restult, read from Mdata
+        --     if wb_mem_op_otherpipe = '1' then
+        --         ex_r <= wb_mdata(N-1 downto 0);
+        --     else --read from Alu res reg
+        --         ex_r <= wb_AR_otherpipe(N-1 downto 0); 
+        --     end if;
+        --     load_forwarded <= '1';
+        --     --not stalling
+        --     input_mem_cw_z<='0';
+        --     stall_DandE<='0';
+        -- --Same but for mypipe
+        -- elsif ex_r_code=wb_rt_code_mypipe and wb_WBreg_mypipe = '1'then
+        --         if wb_mem_op_mypipe = '1' then
+        --             ex_r <= wb_mdata(N-1 downto 0);
+        --         else --read from Alu res reg
+        --             ex_r <= wb_AR_mypipe(N-1 downto 0); 
+        --         end if;
+        --         load_forwarded <= '1';
+        --         --not stalling
+        --         input_mem_cw_z<='0';
+        --         stall_DandE<='0';
+        -- else
+        --     load_forwarded <= '0';
+        --     input_mem_cw_z<='0';
+        --     stall_DandE<='0';
+        -- end if; 
     end process; 
 
     end Behavioral;

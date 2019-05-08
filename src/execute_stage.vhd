@@ -68,7 +68,7 @@ architecture structure of ExecuteStage is
                 Sel => Cw_1(31 downto 28),
                 A => A1,
                 B => B1,
-                Cin => Cin1,
+                Cin => '0',
                 Imm => Cw_1(6 downto 3),
                 F => F1,
                 Cout => Carryout1,
@@ -88,6 +88,7 @@ architecture structure of ExecuteStage is
                     '0' when Cw_1(7) = '1' or reset_flags(2) = '1' else
                     Carryout1 when ChangesCarry(Cw_1(31 downto 28)) = '1' else
                     flag_out(2);
+        
         Cin2_new <= flag1(2);
         alsu_inst2 : entity orthrus.alsu
             generic map (N => N)
@@ -95,7 +96,7 @@ architecture structure of ExecuteStage is
                 Sel => Cw_2(31 downto 28),
                 A => A2,
                 B => B2,
-                Cin => Cin2_new,
+                Cin => '0',
                 Imm => Cw_2(6 downto 3),
                 F => F2,
                 Cout => Carryout2,
@@ -104,17 +105,17 @@ architecture structure of ExecuteStage is
             );
 
         flag2(0) <= '0' when reset_flags(0) = '1' else
-                    flag_out(0) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
+                    flag1(0) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
                     zero2_out;
 
         flag2(1) <= '0' when reset_flags(1) = '1' else
-                    flag_out(1) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
+                    flag1(1) when (Cw_2(8) = '1' or Cw_2(7) = '1' or Cw_2(9) = '0') else
                     neg2_out;
 
         flag2(2) <= '1' when Cw_2(8) = '1' else
                     '0' when Cw_2(7) = '1' or reset_flags(2) = '1' else
                     Carryout2 when ChangesCarry(Cw_2(31 downto 28)) = '1' else
-                    flag_out(2);
+                    flag1(2);
 
         FlagReg_inst : entity orthrus.Reg
             generic map ( n => N )
