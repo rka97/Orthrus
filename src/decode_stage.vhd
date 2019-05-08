@@ -16,7 +16,7 @@ entity DecodeStage is
         reset           :   in std_logic;
 
         -- control signals
-        -- stall           :   in std_logic;
+        stall           :   in std_logic;
         -- for the stack pointer
         -- sp_write        :   in std_logic;
         -- sp_data_in      :   in std_logic_vector(M-1 downto 0);
@@ -38,6 +38,10 @@ entity DecodeStage is
         zero_flag       :   in std_logic;
         negative_flag   :   in std_logic;
         carry_flag      :   in std_logic;
+
+        -- From the Control Hazard Unit
+        take_addr : in std_logic;
+        branch_forwarded_addr : in std_logic_vector(M-1 downto 0);
 
         -- output control signals
         branch          :   out std_logic;
@@ -92,8 +96,8 @@ architecture Behavioral of DecodeStage is
     -- signal sp_data_reg : std_logic_vector(M-1 downto 0);
     begin
         not_clk <= not(clk);
-        control_word_1 <= cw_data_1(31 downto 0);
-        control_word_2 <= cw_data_2(31 downto 0);
+        control_word_1 <= cw_data_1(31 downto 0) when stall = '0' else (others => '0');
+        control_word_2 <= cw_data_2(31 downto 0) when stall = '0' else (others => '0');
 
         rt1_addr <= cw_data_1(27 downto 25);
         rs1_addr <= cw_data_1(24 downto 22);
@@ -132,7 +136,7 @@ architecture Behavioral of DecodeStage is
         
         -- TODO: Branch address padding.
         branch <= br_data_out(0);
-        branch_address <= br_data_out(M downto 1);
+        branch_address <= branch_forwarded_addr when take_addr = '1' else br_data_out(M downto 1);
         br_data_in(0) <= will_branch_1 or will_branch_2;
         br_data_in(M downto 1) <= rf_rt1_data when will_branch_1 = '1' else
                                   rf_rt2_data when will_branch_2 = '1' else
@@ -268,9 +272,13 @@ architecture Behavioral of DecodeStage is
 
         -- TODO: Stack Pointer management.
         -- comp_new_sp : process(sp_write, IR1_Op, IR2_Op)
-        comp_new_sp : process(IR2_Op, IR1_Op)
+        comp_new_sp : process(stall, IR2_Op, IR1_Op)
         begin
-            if IR2_Op = INST_PUSH then
+            if stall = '1' then
+                sp_increment <= 0;
+                sp_subtract <= '0';
+                sp_load_in <= '0';
+            elsif IR2_Op = INST_PUSH then
                 sp_increment <= 1;
                 sp_subtract <= '1';
                 sp_load_in <= '1';

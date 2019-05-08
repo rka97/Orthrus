@@ -46,16 +46,16 @@ JC R3      # Jump Not taken
 # check destination forwarding
 NOT R5     # R5=FFFF, Z= 0, C--> not change, N=1
 in  R6     # R6=200, flag no change
-NOP
+# NOP
 
-NOP
-NOP
+# NOP
+# NOP
 
-NOP
-NOP
+# NOP
+# NOP
 
-NOP
-NOP
+# NOP
+# NOP
 
 JN  R6     # jump taken, N = 0
 INC R1
@@ -71,11 +71,11 @@ rti
 SETC      # C-->1
 POP R6     # R6=300, SP=FFFFFFFF
 
-NOP
-NOP
+# NOP
+# NOP
 
-NOP
-NOP
+# NOP
+# NOP
 
 Call R6    # SP=FFFFFFFD, M[FFFFFFFF]=half next PC,M[FFFFFFFE]=other half next PC
           # try interrup here
@@ -95,7 +95,7 @@ NOP
 NOP
 
 .ORG 300
-Add R3,R6 # R6=400
+Add R3,R6 # R6=401
 Add R1,R2 # R1=80, C->0,N=0, Z=0
 ret
 SetC           # this shouldnot be executed

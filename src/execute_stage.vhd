@@ -33,7 +33,7 @@ architecture structure of ExecuteStage is
     signal x1, x2 : std_logic_vector(N-1 downto 0) := (others => 'Z');
     signal y1, y2 : std_logic_vector(N-1 downto 0) := (others => 'Z');
 
-    signal Cin1, Cin2 : std_logic := 'Z';
+    signal Cin1, Cin2, Cin2_new : std_logic := 'Z';
     signal result1, result2 : std_logic_vector(N-1 downto 0) := (others => 'Z');
     signal Carryout1, Carryout2 : std_logic := 'Z';
     signal zero1_out, zero2_out, neg1_out, neg2_out : std_logic := 'Z';
@@ -88,14 +88,14 @@ architecture structure of ExecuteStage is
                     '0' when Cw_1(7) = '1' or reset_flags(2) = '1' else
                     Carryout1 when ChangesCarry(Cw_1(31 downto 28)) = '1' else
                     flag_out(2);
-
+        Cin2_new <= flag1(2);
         alsu_inst2 : entity orthrus.alsu
             generic map (N => N)
             port map (
                 Sel => Cw_2(31 downto 28),
                 A => A2,
                 B => B2,
-                Cin => Cin2,
+                Cin => Cin2_new,
                 Imm => Cw_2(6 downto 3),
                 F => F2,
                 Cout => Carryout2,
