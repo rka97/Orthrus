@@ -12,13 +12,13 @@ entity MemoryStage is
 
     port (
         --Pipe1
-        CW1 : in std_logic_vector(buffer_unit-1 downto 0);
+        ControlW1 : in std_logic_vector(buffer_unit-1 downto 0);
         ar_S1: in std_logic_vector(N-1 downto 0);
         ar_T1: in std_logic_vector(N-1 downto 0);
         push_addr_1 : in std_logic_vector(M-1 downto 0);
 
         --Pipe2
-        CW2 : in std_logic_vector(buffer_unit-1 downto 0);
+        ControlW2 : in std_logic_vector(buffer_unit-1 downto 0);
         ar_S2: in std_logic_vector(N-1 downto 0);
         ar_T2: in std_logic_vector(N-1 downto 0);
         push_addr_2 : in std_logic_vector(M-1 downto 0);
@@ -33,7 +33,9 @@ entity MemoryStage is
         M_Data: out std_logic_vector(buffer_unit-1 downto 0); --data to WRITE to mem
         M_Rqst_r: out std_logic; --to mem
         M_Rqst_w: out std_logic; --to mem
-        M_write_double : out std_logic -- to mem
+        M_write_double : out std_logic; -- to mem
+
+        cw_z : in std_logic
     );
 
 
@@ -42,6 +44,7 @@ end MemoryStage;
 
 
 architecture bhv of MemoryStage is
+    signal CW1, CW2 : std_logic_vector(buffer_unit-1 downto 0);
     --Memory unit 1 out signals
     signal M_Rqst1_r: std_logic;
     signal M_Rqst1_w: std_logic;
@@ -57,6 +60,9 @@ architecture bhv of MemoryStage is
 
 
     begin
+        CW1 <= ControlW1 when cw_z = '0' else (others => '0');
+        CW2 <= ControlW2 when cw_z = '0' else (others => '0');
+        
         mem_unit1: entity orthrus.MemoryUnit
         generic map (N => N,M=>M, buffer_unit=>buffer_unit)
         port map (

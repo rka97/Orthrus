@@ -9,19 +9,21 @@ entity ExecuteStage is
         N : natural := 16
     );
     port(
-        A1    : in std_logic_vector(N-1 downto 0);
-        B1    : in std_logic_vector(N-1 downto 0);
-        F1    : out std_logic_vector(N-1 downto 0);
-        Cw_1  : in std_logic_vector(2*N-1 downto 0);
+        A1          : in std_logic_vector(N-1 downto 0);
+        B1          : in std_logic_vector(N-1 downto 0);
+        F1          : out std_logic_vector(N-1 downto 0);
+        ControlW_1  : in std_logic_vector(2*N-1 downto 0);
 
-        A2    : in std_logic_vector(N-1 downto 0);
-        B2    : in std_logic_vector(N-1 downto 0);
-        F2    : out std_logic_vector(N-1 downto 0);
-        Cw_2  : in std_logic_vector(2*N-1 downto 0);
+        A2          : in std_logic_vector(N-1 downto 0);
+        B2          : in std_logic_vector(N-1 downto 0);
+        F2          : out std_logic_vector(N-1 downto 0);
+        ControlW_2  : in std_logic_vector(2*N-1 downto 0);
 
-        clk   : in std_logic;
-        reset : in std_logic;
-        Flags : out std_logic_vector(N-1 downto 0)
+        clk         : in std_logic;
+        reset       : in std_logic;
+        Flags       : out std_logic_vector(N-1 downto 0);
+
+        cw_z        : in std_logic
     );
 end ExecuteStage;
 
@@ -41,6 +43,8 @@ architecture structure of ExecuteStage is
     signal ret_flag_load : std_logic := 'Z';
     signal ret_flag_in, ret_flag_out : std_logic_vector(N-1 downto 0) := (others => '0');
 
+    signal Cw_1, Cw_2 : std_logic_vector(2*N-1 downto 0);
+
     function ChangesCarry(
         alu_op : in std_logic_vector(3 downto 0)
     ) return std_logic is
@@ -53,6 +57,9 @@ architecture structure of ExecuteStage is
     end ChangesCarry;
 
     begin
+        Cw_1 <= (others => '0') when cw_z = '1' else ControlW_1;
+        Cw_2 <= (others => '0') when cw_z = '1' else ControlW_2;
+
         alsu_inst1 : entity orthrus.alsu
             generic map (N => N)
             port map (
@@ -60,11 +67,7 @@ architecture structure of ExecuteStage is
                 A => A1,
                 B => B1,
                 Cin => Cin1,
-<<<<<<< HEAD
-                 Imm => Imm1,
-=======
                 Imm => Cw_1(6 downto 3),
->>>>>>> 294d607e195c73c544c99e10700fb22816cc08f1
                 F => F1,
                 Cout => Carryout1,
                 Zero => zero1_out, --flag1(0),
