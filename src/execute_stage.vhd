@@ -32,6 +32,7 @@ architecture structure of ExecuteStage is
     signal Cin1, Cin2 : std_logic := 'Z';
     signal result1, result2 : std_logic_vector(N-1 downto 0) := (others => 'Z');
     signal Carryout1, Carryout2 : std_logic := 'Z';
+    signal zero1_out, zero2_out, neg1_out, neg2_out : std_logic := 'Z';
     
     signal flag_load : std_logic := 'Z';
     signal flag1,flag2 : std_logic_vector(2 downto 0) := (others => 'Z');
@@ -62,9 +63,16 @@ architecture structure of ExecuteStage is
                 Imm => Cw_1(6 downto 3),
                 F => F1,
                 Cout => Carryout1,
-                Zero => flag1(0),
-                Negative => flag1(1)
+                Zero => zero1_out, --flag1(0),
+                Negative => neg1_out --flag1(1)
             );
+
+        flag1(0) <= flag_out(0) when (Cw_1(8) = '1' or Cw_1(7) = '1') else
+                    zero1_out;
+
+        flag1(1) <= flag_out(1) when (Cw_1(8) = '1' or Cw_1(7) = '1') else
+                    neg1_out;
+
         flag1(2) <= '1' when Cw_1(8) = '1' else
                     '0' when Cw_1(7) = '1' else
                     Carryout1 when ChangesCarry(Cw_1(31 downto 28)) = '1' else
@@ -80,10 +88,16 @@ architecture structure of ExecuteStage is
                 Imm => Cw_2(6 downto 3),
                 F => F2,
                 Cout => Carryout2,
-                Zero => flag2(0),
-                Negative => flag2(1)
+                Zero => zero2_out, --flag2(0),
+                Negative => neg2_out --flag2(1)
             );
-        
+
+        flag2(0) <= flag_out(0) when (Cw_2(8) = '1' or Cw_2(7) = '1') else
+            zero2_out;
+
+        flag2(1) <= flag_out(1) when (Cw_2(8) = '1' or Cw_2(7) = '1') else
+            neg2_out;
+
         flag2(2) <= '1' when Cw_2(8) = '1' else
                     '0' when Cw_2(7) = '1' else
                     Carryout2 when ChangesCarry(Cw_2(31 downto 28)) = '1' else
@@ -103,7 +117,7 @@ architecture structure of ExecuteStage is
                                 flag1 when Cw_1(9) = '1';
         
 
-        Flags <= flag_in; --try it with flag_in
+        Flags <= flag_in;
 
         TempFlagReg_inst : entity orthrus.Reg
             generic map ( n => N )
