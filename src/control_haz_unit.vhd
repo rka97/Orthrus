@@ -71,6 +71,7 @@ entity ControlHazardUnit is
     -- 3   1   -1  
     -- 4   2   0
     begin   
+        -- TODO: handle RET/RTI hazard properly (this won't do).
         control_haz_rt: process(mem_writePC1,mem_writePC2)
         begin
             if mem_writePC1='1' or mem_writePC2='1' then
@@ -84,8 +85,18 @@ entity ControlHazardUnit is
             mem_rt_code2,mem_WBreg2,mem_mem_op2,mem_rt_code1,mem_WBreg1,mem_mem_op1,mem_AR2,mem_AR1,
             wb_rt_code2,wb_WBreg2,wb_AR2,wb_rt_code1,wb_WBreg1,wb_AR1)
         begin
+            flush_d2 <= '0';
+            branch_add<= (others => '0');
+            take_addr <='0';
+            stall_d <= '0';
+            stall_e <= '0';
+            stall_m <= '0';
+            flush_e <= '0'; 
+            flush_d <= '0';
+            input_cw_ex_z <= '0';
+            input_cw_mem_z <= '0';
             if branch='1'  then
-                flush_d2<='1'; --only flush decode 2 buffer
+                flush_d2 <= '1'; --only flush decode 2 buffer
                 if dec_rt_code1=ex_rt_code2 and ex_WBreg2='1' and ex_mem_op2='1' then 
                     stall_d<='1';
                     input_cw_ex_z<='1';
@@ -115,7 +126,7 @@ entity ControlHazardUnit is
                 elsif dec_rt_code1=mem_rt_code2 and mem_WBreg2='1' and  mem_mem_op2='1' then --and not (stalled_o='1')  then
                     stall_d<='1';
                     stall_e<='1';
-                    input_cw_mem_z<='1';
+                    input_cw_mem_z<='0';
                     take_addr<='0';
                     input_cw_ex_z<='0';
                 elsif dec_rt_code1=mem_rt_code2 and mem_WBreg2='1' then
@@ -153,7 +164,7 @@ entity ControlHazardUnit is
                     stall_e<='0';
                     input_cw_mem_z<='0';
                 else
-                    branch_add<=(others => 'Z');
+                    branch_add<=(others => '0');
                     take_addr <='0';
                     stall_d <= '0';
                     stall_e <= '0';
@@ -163,8 +174,6 @@ entity ControlHazardUnit is
                     input_cw_ex_z <= '0';
                     input_cw_mem_z <= '0';
                 end if;
-            else
-                flush_d2<='0';
             end if;
         end process;         
     end bhv;

@@ -7,7 +7,7 @@ entity DecodeStageTB is
 end DecodeStageTB;
 
 architecture TB of DecodeStageTB is
-    signal clk, reset : std_logic := '0';
+    signal clk, reset, stall : std_logic := '0';
     signal sp_write : std_logic := '0';
     signal sp_data_in : std_logic_vector(M-1 downto 0) := (others => '0');
 
@@ -37,7 +37,7 @@ begin
         port map (
             clk => clk,
             reset => reset,
-            -- stall => stall,
+            stall => stall,
             -- sp_write => sp_write,
             -- sp_data_in => sp_data_in,
             rf_write_1 => rf_write_1,
@@ -53,6 +53,8 @@ begin
             zero_flag => zero_flag,
             negative_flag => negative_flag,
             carry_flag => carry_flag,
+            take_addr => '0',
+            branch_forwarded_addr => (M-1 downto 0 => '0'),
             branch => branch,
             branch_address => branch_address,
             control_word_1 => control_word_1,
