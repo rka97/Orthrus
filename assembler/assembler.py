@@ -66,10 +66,10 @@ def assemble(file_name):
             memory[current_addr] = op_codes[words[0]] + \
                 register_codes[words[1]] + \
                 "000" + \
-                binary_repr(int(words[2]), width=4)
+                binary_repr(int(words[2]), width=4) + "0"
             logger.info("At address " + current_addr_str +
                         ": " + words[0] + " " + words[1] + " " + words[2])
-            print(len(memory[current_addr]))
+            # print(len(memory[current_addr]))
             assert(len(memory[current_addr]) == 16)
             current_addr += 1
         elif long_immediate_commands.count(words[0]) > 0:

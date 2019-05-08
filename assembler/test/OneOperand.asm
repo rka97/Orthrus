@@ -24,9 +24,31 @@ NOP
 inc R1	       #R1 =0000 , C --> 1 , N --> 0 , Z --> 1
 in R1	       #R1= 5,add 5 on the in port,flags no change	
 in R2          #R2= 10,add 10 on the in port, flags no change
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
 NOT R2	       #R2= FFEF, C--> no change, N -->1,Z-->0
 inc R1         #R1= 6, C --> 0, N -->0, Z-->0
-Dec R2         #R2= FFEE,C-->1 , N-->1, Z-->0
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+Dec R2         #R2= FFEE,C-->1 , N-->1, Z-->0NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
 out R1
 out R3
 out R2

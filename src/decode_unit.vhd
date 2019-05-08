@@ -80,10 +80,10 @@ architecture Behavioral of DecodeUnit is
             ShiftAmt <= (others => '0');
             if IR_Op = INST_NOT or IR_Op = INST_INC or IR_Op = INST_DEC then
                 -- ALUOp <= ALUOP_INC;
-                RSAddr <= (others => '0');
-                rs_read <= '0';
+                RSAddr <= IR_short(10 downto 8); -- (others => '0');
+                rs_read <= '1';
                 RTAddr <= IR_short(10 downto 8);
-                rt_read <= '1';
+                rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '1';
             elsif IR_Op = INST_OUT or IR_Op = INST_PUSH then
@@ -136,10 +136,10 @@ architecture Behavioral of DecodeUnit is
                 UpdateFlags <= '1';
             elsif IR_Op = INST_SHL or IR_Op = INST_SHR then
                 -- ALUOp <= ALUOP_SHL;
-                RSAddr <= (others => '0');
-                rs_read <= '0';
+                RSAddr <= IR_short(10 downto 8); --(others => '0');
+                rs_read <= '1';
                 RTAddr <= IR_short(10 downto 8);
-                rt_read <= '1';
+                rt_read <= '0';
                 WBReg <= '1';
                 UpdateFlags <= '1';
                 ShiftAmt <= IR_short(4 downto 1);
@@ -152,6 +152,7 @@ architecture Behavioral of DecodeUnit is
                 WBReg <= '0';
                 UpdateFlags <= '0';
             elsif IR_Op = INST_SETC or IR_Op = INST_CLRC then
+                -- ALUOp <= ALUOP_NOP
                 RTAddr <= (others => '0');
                 rt_read <= '0';
                 RSAddr <= (others => '0');
