@@ -29,8 +29,8 @@ AND R1,R5   # R5=0 , Z = 1
             # try interrupt here
 NOP
 
-NOP
-NOP
+# NOP
+# NOP
 
 JZ  R2      # Jump taken, Z = 0
 SETC        # this statement shouldn't be executed, C-->1
@@ -47,7 +47,7 @@ JN  R6     # jump taken, N = 0
 INC R1
 
 .ORG 100
-SETC
+CLRC
 AND R0,R0    # N=0,Z=1
 out R6
 rti
